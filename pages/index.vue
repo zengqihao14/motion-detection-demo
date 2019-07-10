@@ -2,8 +2,8 @@
   .container
     h1.page-title Motion Detection DEMO
     .contents
-      router-link.button-link(to="/pc") PC
-      router-link.button-link(to="/mobile") Mobile
+      router-link.button-link(to="pc") PC
+      router-link.button-link(to="mobile") Mobile
 </template>
 
 <script>
