@@ -13,6 +13,11 @@ export default {
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+    ],
+    script: [
+      {
+        src: 'https://cdn.jsdelivr.net/npm/handtrackjs/dist/handtrack.min.js'
+      }
     ]
   },
   /*

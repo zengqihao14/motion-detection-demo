@@ -10,7 +10,7 @@
 </template>
 
 <script>
-  import * as handTrack from 'handtrackjs';
+  // import * as handTrack from 'handtrackjs';
 
   const modelParams = {
     flipHorizontal: true,   // flip e.g for video
