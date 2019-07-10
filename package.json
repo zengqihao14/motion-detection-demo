@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "ant-design-vue": "^1.1.10",
+    "handtrackjs": "^0.0.13",
     "nuxt": "^2.0.0"
   },
   "devDependencies": {
