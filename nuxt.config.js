@@ -16,7 +16,7 @@ export default {
     ],
     script: [
       {
-        src: 'https://cdn.jsdelivr.net/npm/handtrackjs/dist/handtrack.min.js'
+        src: '/handtrack.js'
       }
     ]
   },
