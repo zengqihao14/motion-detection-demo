@@ -1,14 +1,13 @@
 <template lang="pug">
   .inner-page-container
-    h1.page-title Motion Detection DEMO
+    h1.inner-page-title Motion Detection DEMO
     .contents
       .detection-body(ref="bodyEl")
         video.detection-video(ref="videoEl" autoplay="true")
         canvas.detection-canvas(ref="handCanvas")
-      p {{center}}
-      button.button-link(
-        @click="startVideo"
-      ) START
+    button.inner-button-link(
+      @click="startVideo"
+    ) START
 </template>
 
 <script>
@@ -122,15 +121,6 @@
           this.startVideo();
         });
       }
-      if (bodyEl) {
-        bodyEl.addEventListener('mousemove', this.handleMousePosition)
-      }
-    },
-    beforeDestroy() {
-      const bodyEl = this.$refs.bodyEl;
-      if (bodyEl) {
-        bodyEl.removeEventListener('mousemove', this.handleMousePosition)
-      }
     }
   }
 </script>
@@ -139,27 +129,37 @@
   .inner-page-container
     position: relative
     box-sizing: border-box
-    padding: 16px
+    padding: 0
     margin: 0 auto
     min-height: 100vh
     display: flex
     flex-direction: column
     text-align: center
+    .inner-page-title
+      box-sizing: border-box
+      position: absolute
+      display: block
+      padding: 3px 8px
+      font-size: 14px
+      font-weight: bold
+      color: #FFF
+      background-color: #333
+      width: 100%
+      z-index: 10
     .contents
       position: relative
       display: block
       width: 100%
-      margin: 20px auto
+      height: 100vh
     .detection-body
       position: relative
       box-sizing: border-box
       width: 100%
-      max-width: 1024px
       padding: 0
-      padding-top: 100%
+      padding-top: 62.25%
       height: auto
       border: 1px solid #333
-      margin: 0 auto 25px
+      margin: 0 auto
     .detection-video
       position: absolute
       top: 0
@@ -177,4 +177,20 @@
       width: 100%
       height: 100%
       z-index: 1
+  .inner-button-link
+    position: absolute
+    box-sizing: border-box
+    display: block
+    right: 25px
+    top: 4px
+    color: #333
+    background-color: #FFF
+    border-radius: 3px
+    border: 1px solid #FFF
+    font-size: 10px
+    font-weight: bold
+    line-height: 1
+    padding: 3px 8px
+    cursor: pointer
+    z-index: 12
 </style>
