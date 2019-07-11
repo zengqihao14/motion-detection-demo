@@ -25,8 +25,14 @@
             :disabled="started"
             @click="startQuestion"
           ) START
-        video.detection-video(ref="videoEl" autoplay="true")
-        canvas.detection-canvas(ref="handCanvas")
+        video.detection-video(
+          ref="videoEl"
+          autoplay="true"
+        )
+        canvas.detection-canvas(
+          ref="handCanvas"
+          :class="isDebug ? 'isDebug' : ''"
+        )
     button.inner-button-link(
       @click="reset"
     ) RESET
@@ -336,7 +342,10 @@
       bottom: 0
       width: 100%
       height: 100%
+      display: none
       z-index: 1
+      &.isDebug
+        display: block
     .main-content
       box-sizing: border-box
       position: absolute
