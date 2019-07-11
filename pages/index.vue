@@ -43,9 +43,9 @@
 
   const modelParams = {
     flipHorizontal: true,   // flip e.g for video
-    maxNumBoxes: 1,        // maximum number of boxes to detect
+    maxNumBoxes: 2,        // maximum number of boxes to detect
     iouThreshold: 0.5,      // ioU threshold for non-max suppression
-    scoreThreshold: 0.9,    // confidence threshold for predictions.
+    scoreThreshold: 0.7,    // confidence threshold for predictions.
   };
 
   const QUESTION_LIST = [
@@ -166,21 +166,29 @@
           if (this.center.x !== 0 && this.center.y !== 0) {
             const offsetX = this.center.x - center.x;
             const offsetY = this.center.y - center.y;
-            if (Math.abs(offsetX) > 30) {
-              if (offsetX > 0) {
-                // console.log('left')
-              } else {
-                // console.log('right')
-              }
-            }
-            if (Math.abs(offsetY) > 200) {
-              if (offsetY > 0) {
-                console.log('up')
-                if (this.hoveredOptionIdx >= 0) {
+            const question = this.questions[this.currentQuestionId];
+            if (question.type === 2) {
+              if (Math.abs(offsetX) > 300) {
+                if (offsetX > 0) {
+                  console.log('left')
+                  this.hoveredOptionIdx = 0
+                  this.submitAnswerByHand(this.hoveredOptionIdx);
+                } else {
+                  console.log('right')
+                  this.hoveredOptionIdx = 1
                   this.submitAnswerByHand(this.hoveredOptionIdx);
                 }
-              } else {
-                // console.log('dowm')
+              }
+            } else {
+              if (Math.abs(offsetY) > 200) {
+                if (offsetY > 0) {
+                  console.log('up')
+                  if (this.hoveredOptionIdx >= 0) {
+                    this.submitAnswerByHand(this.hoveredOptionIdx);
+                  }
+                } else {
+                  // console.log('dowm')
+                }
               }
             }
           }
@@ -191,11 +199,17 @@
       startQuestion() {
         this.started = true
         this.currentQuestionId = this.currentQuestionId ? 0 : 1
+        // this.currentQuestionId = 0
         setTimeout(() => {
           this.createQuestion(this.questions[this.currentQuestionId]);
         }, 1000);
       },
       createQuestion(question) {
+        const optionEls = document.querySelectorAll('.question-option');
+        optionEls.forEach((optionEl, idx) => {
+          optionEl.classList.remove('isSelected');
+          optionEl.classList.remove('isDroped');
+        })
         this.showQuestion = true
       },
       detectInOption(pos) {
@@ -206,9 +220,8 @@
           const left = rect.x
           const bottom = rect.y + rect.height
           const right = rect.x + rect.width
-          if (top < pos.y &&
+          if (
             left < pos.x &&
-            bottom > pos.y &&
             right > pos.x
           ) {
             this.hoveredOptionIdx = idx;
@@ -233,32 +246,42 @@
         const optionEls = document.querySelectorAll('.question-option');
         optionEls.forEach((optionEl, idx) => {
           if (idx === targetIdx) {
-            optionEl.classList.add('isSelected');
+            if (!optionEl.classList.contains('isSelected')) {
+              optionEl.classList.add('isSelected');
+            }
           } else {
-            optionEl.classList.add('isDroped');
+            if (!optionEl.classList.contains('isDroped')) {
+              optionEl.classList.add('isDroped');
+            }
           }
         })
         setTimeout(() => {
           this.answered = false
           this.showQuestion = false
           this.currentQuestionId = this.currentQuestionId ? 0 : 1
+          // this.currentQuestionId = 0
           this.createQuestion(this.questions[this.currentQuestionId]);
         }, 1000);
       },
-      submitAnswerByHand(idx) {
+      submitAnswerByHand(targetIdx) {
+        console.log('submit targetIdx', targetIdx)
         const optionEls = document.querySelectorAll('.question-option');
-        const targetIdx = idx;
         optionEls.forEach((optionEl, idx) => {
           if (idx === targetIdx) {
-            optionEl.classList.add('isSelected');
+            if (!optionEl.classList.contains('isSelected')) {
+              optionEl.classList.add('isSelected');
+            }
           } else {
-            optionEl.classList.add('isDroped');
+            if (!optionEl.classList.contains('isDroped')) {
+              optionEl.classList.add('isDroped');
+            }
           }
         })
         setTimeout(() => {
           this.answered = false
           this.showQuestion = false
           this.currentQuestionId = this.currentQuestionId ? 0 : 1
+          // this.currentQuestionId = 0
           this.hoveredOptionIdx = -1
           this.createQuestion(this.questions[this.currentQuestionId]);
         }, 1000);
