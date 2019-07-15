@@ -39,7 +39,7 @@
 </template>
 
 <script>
-  // import * as handTrack from 'handtrackjs';
+  import * as posenet from '@tensorflow-models/posenet';
 
   const modelParams = {
     flipHorizontal: true,   // flip e.g for video
@@ -125,11 +125,7 @@
       startVideo() {
         const videoEl = this.$refs.videoEl;
         if (videoEl) {
-          handTrack.startVideo(videoEl).then((status) => {
-            if (status) {
-              this.runDetection()
-            }
-          });
+          console.log('start video')
         }
       },
       runDetection() {
@@ -297,13 +293,13 @@
       videoEl.height = bodyEl.offsetHeight;
 
       this.aspect = handCanvas.width / handCanvas.height;
-      if (handTrack && videoEl  && handCanvas) {
-        // Load the model.
-        handTrack.load(modelParams).then(lmodel => {
-          this.model = lmodel;
-          this.startVideo();
-        });
-      }
+      // if (handTrack && videoEl  && handCanvas) {
+      //   // Load the model.
+      //   handTrack.load(modelParams).then(lmodel => {
+      //     this.model = lmodel;
+      //     this.startVideo();
+      //   });
+      // }
 
       window.addEventListener('keydown', (e) => {
         if (e.key.toLowerCase() === 'd') {
