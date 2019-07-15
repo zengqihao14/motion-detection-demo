@@ -16,7 +16,10 @@ export default {
     ],
     script: [
       {
-        src: '/handtrack.js'
+        src: '/@tensorglow/tfjs.js'
+      },
+      {
+        src: '/@tensorglow/posenet.js'
       }
     ]
   },

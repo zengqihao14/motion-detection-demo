@@ -28,6 +28,7 @@
         video.detection-video(
           ref="videoEl"
           autoplay="true"
+          playsinline
         )
         canvas.detection-canvas(
           ref="handCanvas"
@@ -39,7 +40,9 @@
 </template>
 
 <script>
-  import * as posenet from '@tensorflow-models/posenet';
+  // import * as posenet from '@tensorflow-models/posenet';
+  import { loadVideo } from '~/utils/video'
+  import { detectPoseInRealTime } from '~/utils/detectPose'
 
   const modelParams = {
     flipHorizontal: true,   // flip e.g for video
@@ -97,6 +100,7 @@
     name: 'main-page',
     data() {
       return {
+        net: null,
         aspect: 1,
         center: {
           x: 0,
@@ -121,12 +125,6 @@
         this.hoveredOptionIdx = -1
         this.currentQuestionId = 0
         this.startVideo();
-      },
-      startVideo() {
-        const videoEl = this.$refs.videoEl;
-        if (videoEl) {
-          console.log('start video')
-        }
       },
       runDetection() {
         const videoEl = this.$refs.videoEl;
@@ -283,23 +281,31 @@
         }, 1000);
       }
     },
-    mounted() {
+    async mounted() {
       const bodyEl = this.$refs.bodyEl;
       const videoEl = this.$refs.videoEl;
-      const handCanvas = this.$refs.handCanvas;
-      handCanvas.width = bodyEl.offsetWidth / 2;
-      handCanvas.height = bodyEl.offsetHeight / 2;
+      const canvasEl = this.$refs.handCanvas;
+      canvasEl.width = bodyEl.offsetWidth;
+      canvasEl.height = bodyEl.offsetHeight;
       videoEl.width = bodyEl.offsetWidth;
       videoEl.height = bodyEl.offsetHeight;
 
-      this.aspect = handCanvas.width / handCanvas.height;
-      // if (handTrack && videoEl  && handCanvas) {
-      //   // Load the model.
-      //   handTrack.load(modelParams).then(lmodel => {
-      //     this.model = lmodel;
-      //     this.startVideo();
-      //   });
-      // }
+      this.aspect = canvasEl.width / canvasEl.height;
+
+      this.net = await posenet.load({
+          architecture: 'MobileNetV1',
+          outputStride: 16,
+          inputResolution: 257,
+          multiplier: 1
+      });
+      if (this.net && videoEl  && canvasEl) {
+          try {
+              const video = await loadVideo(videoEl);
+              detectPoseInRealTime(video, canvasEl, this.net);
+          } catch (e) {
+              throw e;
+          }
+      }
 
       window.addEventListener('keydown', (e) => {
         if (e.key.toLowerCase() === 'd') {
@@ -349,9 +355,9 @@
       position: absolute
       top: 0
       left: 0
-      width: 10px
-      height: 10px
-      z-index: -1
+      width: 100%
+      height: 100%
+      z-index: 1
       display: none
     .detection-canvas
       position: absolute
