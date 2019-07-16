@@ -57,7 +57,6 @@ export const angleBetween = (vector1, vector2) => {
   if (vector1 && vector2) {
     const sin = (vector1.x * vector2.y) - (vector2.x * vector1.y);
     const cos = (vector1.x * vector2.x) + (vector1.y * vector2.y);
-    console.log('vector1', vector2)
     return Math.abs(Math.atan2(sin, cos) * (180 / Math.PI));
   }
   return 0;
@@ -77,4 +76,20 @@ export const calcArmAngle = (wristPos, elbowPos, shoulderPos) => {
     return angleBetween(forearm, arm);
   }
   return 0;
+};
+
+export const detectHandState = (wristPos, elbowPos, shoulderPos) => {
+  if (wristPos && elbowPos) {
+    return wristPos.y > elbowPos.y ? 'down' : 'up';
+  }
+  return 'down';
+};
+
+export const detectOverSholder = (wristPos, elbowPos, shoulderPos) => {
+  if (wristPos && elbowPos && shoulderPos) {
+    if (shoulderPos.y > elbowPos.y) {
+      return elbowPos.y > wristPos.y ? true : false;
+    }
+  }
+  return false;
 };

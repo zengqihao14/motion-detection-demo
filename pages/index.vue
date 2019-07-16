@@ -43,7 +43,7 @@
   // import * as posenet from '@tensorflow-models/posenet';
   import { drawKeypoints } from '~/utils/canvas'
   import { loadVideo } from '~/utils/video';
-  import { calcArmAngle } from '~/utils/detectPose';
+  import { calcArmAngle, detectHandState, detectOverSholder } from '~/utils/detectPose';
   import { INPUT_OPTIONS, SINGLE_POSE_OPTIONS, OUTPUT_OPTIONS } from '~/constants';
 
   const modelParams = {
@@ -107,6 +107,8 @@
         net: null,
         tempOptionIdx: -1,
         tempTrakingPoses: {},
+        righthandState: '',
+        lefthandState: '',
         aspect: 1,
         isDebug: true,
         stopTrading: true,
@@ -126,6 +128,8 @@
         this.stopTrading = true;
         this.answered = false;
         this.showQuestion = false;
+        this.righthandState = '';
+        this.lefthandState = '';
         this.tempOptionIdx = -1;
         this.tempTrakingPoses = {};
         this.hoveredOptionIdx = -1;
@@ -211,16 +215,16 @@
             leftWristPosition = trakingPoses['leftWrist'].position;
           }
 
-          this.detectInOption(rightWristPosition, trakingPoses);
           this.detectAction(trakingPoses, 'right');
+          this.detectAction(trakingPoses, 'left');
 
-          // if (rightWristScore >= leftWristScore) {
-          //   this.detectInOption(rightWristPosition, trakingPoses);
-          //   this.detectAction(trakingPoses, 'right');
-          // } else {
-          //   this.detectInOption(leftWristPosition, trakingPoses);
-          //   this.detectAction(trakingPoses, 'left');
-          // }
+          if (this.righthandState === 'up') {
+            this.detectInOption(rightWristPosition, trakingPoses);
+          } else if (this.lefthandState === 'up') {
+            this.detectInOption(leftWristPosition, trakingPoses);
+          } else {
+            this.hoveredOptionIdx = -1;
+          }
         }
       },
       startQuestion() {
@@ -277,36 +281,48 @@
           let prevWristPos = null;
           let prevElbowPos = null;
           let prevShoulderPos = null;
-          if (this.hoveredOptionIdx) { // 4问
-            if (hand === 'right') {
-              wristPos = trakingPoses['rightWrist'] ? trakingPoses['rightWrist'].position : null;
-              elbowPos = trakingPoses['rightElbow'] ? trakingPoses['rightElbow'].position : null;
-              shoulderPos = trakingPoses['rightShoulder'] ? trakingPoses['rightShoulder'].position : null;
+          if (hand === 'right') {
+            wristPos = trakingPoses['rightWrist'] ? trakingPoses['rightWrist'].position : null;
+            elbowPos = trakingPoses['rightElbow'] ? trakingPoses['rightElbow'].position : null;
+            shoulderPos = trakingPoses['rightShoulder'] ? trakingPoses['rightShoulder'].position : null;
 
-              prevWristPos = this.tempTrakingPoses['rightWrist'] ? this.tempTrakingPoses['rightWrist'].position : null;
-              prevElbowPos = this.tempTrakingPoses['rightElbow'] ? this.tempTrakingPoses['rightElbow'].position : null;
-              prevShoulderPos = this.tempTrakingPoses['rightShoulder'] ? this.tempTrakingPoses['rightShoulder'].position : null;
-            } else if (hand === 'left') {
-              wristPos = trakingPoses['leftWrist'] ? trakingPoses['leftWrist'].position : null;
-              elbowPos = trakingPoses['leftElbow'] ? trakingPoses['leftElbow'].position : null;
-              shoulderPos = trakingPoses['leftShoulder'] ? trakingPoses['leftShoulder'].position : null;
+            prevWristPos = this.tempTrakingPoses['rightWrist'] ? this.tempTrakingPoses['rightWrist'].position : null;
+            prevElbowPos = this.tempTrakingPoses['rightElbow'] ? this.tempTrakingPoses['rightElbow'].position : null;
+            prevShoulderPos = this.tempTrakingPoses['rightShoulder'] ? this.tempTrakingPoses['rightShoulder'].position : null;
+          } else if (hand === 'left') {
+            wristPos = trakingPoses['leftWrist'] ? trakingPoses['leftWrist'].position : null;
+            elbowPos = trakingPoses['leftElbow'] ? trakingPoses['leftElbow'].position : null;
+            shoulderPos = trakingPoses['leftShoulder'] ? trakingPoses['leftShoulder'].position : null;
 
-              prevWristPos = this.tempTrakingPoses['leftWrist'] ? this.tempTrakingPoses['leftWrist'].position : null;
-              prevElbowPos = this.tempTrakingPoses['leftElbow'] ? this.tempTrakingPoses['leftElbow'].position : null;
-              prevShoulderPos = this.tempTrakingPoses['leftShoulder'] ? this.tempTrakingPoses['leftShoulder'].position : null;
-            }
+            prevWristPos = this.tempTrakingPoses['leftWrist'] ? this.tempTrakingPoses['leftWrist'].position : null;
+            prevElbowPos = this.tempTrakingPoses['leftElbow'] ? this.tempTrakingPoses['leftElbow'].position : null;
+            prevShoulderPos = this.tempTrakingPoses['leftShoulder'] ? this.tempTrakingPoses['leftShoulder'].position : null;
+          }
 
-            const angle = calcArmAngle(wristPos, elbowPos, shoulderPos);
-            const prevAngle = calcArmAngle(prevWristPos, prevElbowPos, prevShoulderPos);
+          const angle = calcArmAngle(wristPos, elbowPos, shoulderPos);
+          const prevAngle = calcArmAngle(prevWristPos, prevElbowPos, prevShoulderPos);
+          const handState = detectHandState(wristPos, elbowPos, shoulderPos);
+          const overHead = detectOverSholder(wristPos, elbowPos, shoulderPos);
+          if (hand === 'right') {
+            this.righthandState = handState
+          } else {
+            this.lefthandState = handState
+          }
 
-            if (angle - prevAngle >= 75) {
-              this.stopTrading = true;
-              this.tempOptionIdx = -1;
-              this.tempTrakingPoses = {};
-              this.submitAnswerByHand(this.hoveredOptionIdx);
-            }
+          if (overHead) {
+            console.log('overHead', hand, overHead)
+          }
 
-            console.log('angle, prevAngle', angle, prevAngle)
+          if (this.hoveredOptionIdx > -1 &&
+            overHead &&
+            handState === 'up'
+          ) {
+            this.stopTrading = true;
+            this.tempOptionIdx = -1;
+            this.tempTrakingPoses = {};
+            this.righthandState = '';
+            this.lefthandState = '';
+            this.submitAnswerByHand(this.hoveredOptionIdx);
           }
         }
       },
