@@ -1,8 +1,8 @@
 const defaultQuantBytes = 2;
 
-const defaultMobileNetMultiplier = 0.5; // 越小越快 1.01, 1.0, 0.75, or 0.50
+const defaultMobileNetMultiplier = 1; // 越小越快 1.01, 1.0, 0.75, or 0.50
 const defaultMobileNetStride = 16; // 越大越快 8, 16, 32
-const defaultMobileNetInputResolution = 193; // 分析的图像大小，越小越快 161, 193, 257, 289, 321, 353, 385, 417, 449, 481, 513
+const defaultMobileNetInputResolution = 257; // 分析的图像大小，越小越快 161, 193, 257, 289, 321, 353, 385, 417, 449, 481, 513
 
 const defaultResNetMultiplier = 1.0;
 const defaultResNetStride = 32;

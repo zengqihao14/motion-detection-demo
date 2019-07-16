@@ -164,35 +164,35 @@
             Object.keys(keypoints).forEach(key => {
               const keypoint = keypoints[key];
               if (keypoint.part === 'rightWrist') {
-                if (score > 0.7) {
+                if (score > 0.56) {
                   trakingPoses['rightWrist'] = keypoint;
                 }
               } else if (keypoint.part === 'leftWrist') {
-                if (score > 0.7) {
+                if (score > 0.56) {
                   trakingPoses['leftWrist'] = keypoint;
                 }
               } else if (keypoint.part === 'rightElbow') {
-                if (score > 0.56) {
+                if (score > 0.6) {
                   trakingPoses['rightElbow'] = keypoint;
                 }
               } else if (keypoint.part === 'leftElbow') {
-                if (score > 0.56) {
+                if (score > 0.6) {
                   trakingPoses['leftElbow'] = keypoint;
                 }
               } else if (keypoint.part === 'rightShoulder') {
-                if (score > 0.56) {
+                if (score > 0.6) {
                   trakingPoses['rightShoulder'] = keypoint;
                 }
               } else if (keypoint.part === 'leftShoulder') {
-                if (score > 0.56) {
+                if (score > 0.6) {
                   trakingPoses['leftShoulder'] = keypoint;
                 }
               }
             });
             this.detectPostion(trakingPoses);
-            // poses.forEach(({score, keypoints}) => {
-            //   drawKeypoints(keypoints, ctx);
-            // });
+            poses.forEach(({ score, keypoints }) => {
+              drawKeypoints(keypoints, ctx);
+            });
           }
         }
         requestAnimationFrame(this.poseDetectionFrame);
