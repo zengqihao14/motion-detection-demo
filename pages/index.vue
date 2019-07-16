@@ -13,6 +13,7 @@
               .question-option(
                 v-for="(option, idx) in questions[currentQuestionId].options"
                 :class="questions[currentQuestionId].type === 2 ? 'two' : ''"
+                :style="`height: ${itemHeight}px`"
                 :key="idx"
                 :data-val="option.val"
                 :data-idx="idx"
@@ -43,7 +44,7 @@
   // import * as posenet from '@tensorflow-models/posenet';
   import { drawKeypoints } from '~/utils/canvas'
   import { loadVideo } from '~/utils/video';
-  import { calcArmAngle, detectHandState, detectOverSholder } from '~/utils/detectPose';
+  import { calcArmAngle, detectHandState, detectOverSholder, detectWaving } from '~/utils/detectPose';
   import { INPUT_OPTIONS, SINGLE_POSE_OPTIONS, OUTPUT_OPTIONS } from '~/constants';
 
   const modelParams = {
@@ -105,6 +106,7 @@
         video: null,
         canvas: null,
         net: null,
+        itemHeight: 100,
         tempOptionIdx: -1,
         tempTrakingPoses: {},
         righthandState: '',
@@ -200,6 +202,8 @@
       },
       detectPostion(trakingPoses) {
         if (trakingPoses) {
+          const currentQuestion = this.questions[this.currentQuestionId];
+          const type = currentQuestion.type;
           let rightWristScore = 0;
           let leftWristScore = 0;
           let rightWristPosition = null;
@@ -218,12 +222,14 @@
           this.detectAction(trakingPoses, 'right');
           this.detectAction(trakingPoses, 'left');
 
-          if (this.righthandState === 'up') {
-            this.detectInOption(rightWristPosition, trakingPoses);
-          } else if (this.lefthandState === 'up') {
-            this.detectInOption(leftWristPosition, trakingPoses);
-          } else {
-            this.hoveredOptionIdx = -1;
+          if (type === 1) {
+            if (this.righthandState === 'up') {
+              this.detectInOption(rightWristPosition, trakingPoses);
+            } else if (this.lefthandState === 'up') {
+              this.detectInOption(leftWristPosition, trakingPoses);
+            } else {
+              this.hoveredOptionIdx = -1;
+            }
           }
         }
       },
@@ -303,26 +309,60 @@
           const prevAngle = calcArmAngle(prevWristPos, prevElbowPos, prevShoulderPos);
           const handState = detectHandState(wristPos, elbowPos, shoulderPos);
           const overHead = detectOverSholder(wristPos, elbowPos, shoulderPos);
+          const waving = detectWaving(wristPos, prevWristPos, hand);
+
           if (hand === 'right') {
+            if (type === 2 && this.righthandState !== 'up' && handState === 'up') {
+              this.tempTrakingPoses = trakingPoses
+            }
             this.righthandState = handState
           } else {
+            if (type === 2 && this.lefthandState !== 'up' && handState === 'up') {
+              this.tempTrakingPoses = trakingPoses
+            }
             this.lefthandState = handState
           }
 
-          if (overHead) {
-            console.log('overHead', hand, overHead)
+          if (type === 2 && handState === 'down') {
+            this.tempTrakingPoses = {}
           }
 
-          if (this.hoveredOptionIdx > -1 &&
-            overHead &&
-            handState === 'up'
-          ) {
-            this.stopTrading = true;
-            this.tempOptionIdx = -1;
-            this.tempTrakingPoses = {};
-            this.righthandState = '';
-            this.lefthandState = '';
-            this.submitAnswerByHand(this.hoveredOptionIdx);
+          if (type === 1) {
+            if (this.hoveredOptionIdx > -1 &&
+              overHead &&
+              handState === 'up'
+            ) {
+              this.stopTrading = true;
+              this.tempOptionIdx = -1;
+              this.tempTrakingPoses = {};
+              this.righthandState = '';
+              this.lefthandState = '';
+              this.submitAnswerByHand(this.hoveredOptionIdx);
+            }
+          } else if (type === 2) {
+            if (
+              waving &&
+              handState === 'up'
+            ) {
+              this.hoveredOptionIdx = waving === 'left' ? 0 : 1;
+              this.stopTrading = true;
+              this.tempOptionIdx = -1;
+              this.tempTrakingPoses = {};
+              this.righthandState = '';
+              this.lefthandState = '';
+              const optionEls = document.querySelectorAll('.question-option');
+              optionEls.forEach((optionEl, idx) => {
+                if (this.hoveredOptionIdx === idx) {
+                  this.hoveredOptionIdx = idx;
+                  if (!optionEl.classList.contains('isHovered')) {
+                    optionEl.classList.add('isHovered');
+                  }
+                } else {
+                  optionEl.classList.remove('isHovered');
+                }
+              });
+              this.submitAnswerByHand(this.hoveredOptionIdx);
+            }
           }
         }
       },
@@ -388,6 +428,7 @@
       this.canvas.height = bodyEl.offsetHeight;
       this.video.width = bodyEl.offsetWidth;
       this.video.height = bodyEl.offsetHeight;
+      this.itemHeight = bodyEl.offsetHeight - 120 - 60 - 30;
 
       this.aspect = this.canvas.width / this.canvas.height;
 

@@ -93,3 +93,17 @@ export const detectOverSholder = (wristPos, elbowPos, shoulderPos) => {
   }
   return false;
 };
+
+export const detectWaving = (wristPos, prevWristPos, hand) => {
+  if (wristPos && prevWristPos) {
+    const offset = wristPos.x - prevWristPos.x;
+    if (offset < -130) {
+      return 'left';
+    }
+    if (offset > 130) {
+      return 'right';
+    }
+    return false;
+  }
+  return false;
+};
