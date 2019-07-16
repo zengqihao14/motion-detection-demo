@@ -43,6 +43,7 @@
   // import * as posenet from '@tensorflow-models/posenet';
   import { drawKeypoints } from '~/utils/canvas'
   import { loadVideo } from '~/utils/video';
+  import { calcArmAngle } from '~/utils/detectPose';
   import { INPUT_OPTIONS, SINGLE_POSE_OPTIONS, OUTPUT_OPTIONS } from '~/constants';
 
   const modelParams = {
@@ -104,9 +105,11 @@
         video: null,
         canvas: null,
         net: null,
-        trakingPoses: {},
+        tempOptionIdx: -1,
+        tempTrakingPoses: {},
         aspect: 1,
         isDebug: true,
+        stopTrading: true,
         started: false,
         showQuestion: false,
         answered: false,
@@ -119,59 +122,72 @@
     },
     methods: {
       reset() {
-        this.started = false
-        this.answered = false
-        this.showQuestion = false
-        this.hoveredOptionIdx = -1
-        this.currentQuestionId = 0
+        this.started = false;
+        this.stopTrading = true;
+        this.answered = false;
+        this.showQuestion = false;
+        this.tempOptionIdx = -1;
+        this.tempTrakingPoses = {};
+        this.hoveredOptionIdx = -1;
+        this.currentQuestionId = 0;
         this.startVideo();
       },
       async poseDetectionFrame() {
-        const ctx = this.canvas.getContext('2d');
-        const flipPoseHorizontal = true;
-        let poses = [];
+        if (!this.stopTrading) {
+          const ctx = this.canvas.getContext('2d');
+          const flipPoseHorizontal = true;
+          let poses = [];
 
-        ctx.clearRect(0, 0, this.video.width, this.video.height);
-        ctx.save();
-        ctx.scale(-1, 1);
-        ctx.translate(-this.video.width, 0);
-        ctx.drawImage(this.video, 0, 0, this.video.width, this.video.height);
-        ctx.restore();
+          ctx.clearRect(0, 0, this.video.width, this.video.height);
+          ctx.save();
+          ctx.scale(-1, 1);
+          ctx.translate(-this.video.width, 0);
+          ctx.drawImage(this.video, 0, 0, this.video.width, this.video.height);
+          ctx.restore();
 
-        const pose = await this.net.estimatePoses(this.video, {
-          flipHorizontal: true,
-          decodingMethod: 'single-person'
-        });
-        if (pose && pose.length) {
-          poses = poses.concat(pose);
-          const score = pose[0].score;
-          const keypoints = pose[0].keypoints;
-          const trakingPoses = {};
-
-          Object.keys(keypoints).forEach(key => {
-            const keypoint = keypoints[key];
-            if (keypoint.part === 'rightWrist') {
-              if (score > 0.51) {
-                trakingPoses['rightWrist'] = keypoint
-              }
-            } else if (keypoint.part === 'leftWrist') {
-              if (score > 0.51) {
-                trakingPoses['leftWrist'] = keypoint
-              }
-            } else if (keypoint.part === 'rightElbow') {
-              if (score > 0.51) {
-                trakingPoses['rightElbow'] = keypoint
-              }
-            } else if (keypoint.part === 'leftElbow') {
-              if (score > 0.51) {
-                trakingPoses['leftElbow'] = keypoint
-              }
-            }
+          const pose = await this.net.estimatePoses(this.video, {
+            flipHorizontal: flipPoseHorizontal,
+            decodingMethod: 'single-person'
           });
-          this.detectPostion(trakingPoses);
-          // poses.forEach(({score, keypoints}) => {
-          //   drawKeypoints(keypoints, ctx);
-          // });
+          if (pose && pose.length) {
+            poses = poses.concat(pose);
+            const score = pose[0].score;
+            const keypoints = pose[0].keypoints;
+            const trakingPoses = {};
+
+            Object.keys(keypoints).forEach(key => {
+              const keypoint = keypoints[key];
+              if (keypoint.part === 'rightWrist') {
+                if (score > 0.7) {
+                  trakingPoses['rightWrist'] = keypoint;
+                }
+              } else if (keypoint.part === 'leftWrist') {
+                if (score > 0.7) {
+                  trakingPoses['leftWrist'] = keypoint;
+                }
+              } else if (keypoint.part === 'rightElbow') {
+                if (score > 0.56) {
+                  trakingPoses['rightElbow'] = keypoint;
+                }
+              } else if (keypoint.part === 'leftElbow') {
+                if (score > 0.56) {
+                  trakingPoses['leftElbow'] = keypoint;
+                }
+              } else if (keypoint.part === 'rightShoulder') {
+                if (score > 0.56) {
+                  trakingPoses['rightShoulder'] = keypoint;
+                }
+              } else if (keypoint.part === 'leftShoulder') {
+                if (score > 0.56) {
+                  trakingPoses['leftShoulder'] = keypoint;
+                }
+              }
+            });
+            this.detectPostion(trakingPoses);
+            // poses.forEach(({score, keypoints}) => {
+            //   drawKeypoints(keypoints, ctx);
+            // });
+          }
         }
         requestAnimationFrame(this.poseDetectionFrame);
       },
@@ -179,65 +195,32 @@
         this.poseDetectionFrame();
       },
       detectPostion(trakingPoses) {
-        const bodyEl = this.$refs.bodyEl;
-        const startBtnEl = this.$refs.startBtnEl
-        if (bodyEl && trakingPoses) {
-          const rect = bodyEl.getBoundingClientRect();
-          const bodySize = {
-            width: rect.width,
-            height: rect.height
-          }
-
-          // if (this.center.x !== 0 && this.center.y !== 0) {
-          //   const offsetX = this.center.x - center.x;
-          //   const offsetY = this.center.y - center.y;
-          //   const question = this.questions[this.currentQuestionId];
-          //   if (question.type === 2) {
-          //     if (Math.abs(offsetX) > 300) {
-          //       if (offsetX > 0) {
-          //         console.log('left')
-          //         this.hoveredOptionIdx = 0
-          //         this.submitAnswerByHand(this.hoveredOptionIdx);
-          //       } else {
-          //         console.log('right')
-          //         this.hoveredOptionIdx = 1
-          //         this.submitAnswerByHand(this.hoveredOptionIdx);
-          //       }
-          //     }
-          //   } else {
-          //     if (Math.abs(offsetY) > 200) {
-          //       if (offsetY > 0) {
-          //         console.log('up')
-          //         if (this.hoveredOptionIdx >= 0) {
-          //           this.submitAnswerByHand(this.hoveredOptionIdx);
-          //         }
-          //       } else {
-          //         // console.log('dowm')
-          //       }
-          //     }
-          //   }
-          // }
-
-          let rightWristScore = 0
-          let leftWristScore = 0
-          let rightWristPosition = null
-          let leftWristPosition = null
+        if (trakingPoses) {
+          let rightWristScore = 0;
+          let leftWristScore = 0;
+          let rightWristPosition = null;
+          let leftWristPosition = null;
           // 右手
           if (trakingPoses['rightWrist']) {
-            rightWristScore = trakingPoses['rightWrist'].score || 0
-            rightWristPosition = trakingPoses['rightWrist'].position
+            rightWristScore = trakingPoses['rightWrist'].score || 0;
+            rightWristPosition = trakingPoses['rightWrist'].position;
           }
           // 左手
           if (trakingPoses['leftWrist']) {
-            leftWristScore = trakingPoses['leftWrist'].score || 0
-            rightWristPosition = trakingPoses['leftWrist'].position
+            leftWristScore = trakingPoses['leftWrist'].score || 0;
+            leftWristPosition = trakingPoses['leftWrist'].position;
           }
 
-          if (rightWristScore >= leftWristScore) {
-            this.detectInOption(rightWristPosition)
-          } else {
-            this.detectInOption(rightWristPosition)
-          }
+          this.detectInOption(rightWristPosition, trakingPoses);
+          this.detectAction(trakingPoses, 'right');
+
+          // if (rightWristScore >= leftWristScore) {
+          //   this.detectInOption(rightWristPosition, trakingPoses);
+          //   this.detectAction(trakingPoses, 'right');
+          // } else {
+          //   this.detectInOption(leftWristPosition, trakingPoses);
+          //   this.detectAction(trakingPoses, 'left');
+          // }
         }
       },
       startQuestion() {
@@ -253,10 +236,11 @@
         optionEls.forEach((optionEl, idx) => {
           optionEl.classList.remove('isSelected');
           optionEl.classList.remove('isDroped');
-        })
-        this.showQuestion = true
+        });
+        this.showQuestion = true;
+        this.stopTrading = false;
       },
-      detectInOption(pos) {
+      detectInOption(pos, trakingPoses) {
         const optionEls = document.querySelectorAll('.question-option');
         if (pos) {
           optionEls.forEach((optionEl, idx) => {
@@ -270,6 +254,10 @@
               right > pos.x
             ) {
               this.hoveredOptionIdx = idx;
+              if (this.tempOptionIdx !== idx) {
+                this.tempOptionIdx = idx
+                this.tempTrakingPoses = trakingPoses
+              }
               if (!optionEl.classList.contains('isHovered')) {
                 optionEl.classList.add('isHovered');
               }
@@ -277,6 +265,49 @@
               optionEl.classList.remove('isHovered');
             }
           })
+        }
+      },
+      detectAction(trakingPoses, hand = 'right') {
+        const currentQuestion = this.questions[this.currentQuestionId];
+        if (currentQuestion) {
+          const type = currentQuestion.type;
+          let wristPos = null;
+          let elbowPos = null;
+          let shoulderPos = null;
+          let prevWristPos = null;
+          let prevElbowPos = null;
+          let prevShoulderPos = null;
+          if (this.hoveredOptionIdx) { // 4问
+            if (hand === 'right') {
+              wristPos = trakingPoses['rightWrist'] ? trakingPoses['rightWrist'].position : null;
+              elbowPos = trakingPoses['rightElbow'] ? trakingPoses['rightElbow'].position : null;
+              shoulderPos = trakingPoses['rightShoulder'] ? trakingPoses['rightShoulder'].position : null;
+
+              prevWristPos = this.tempTrakingPoses['rightWrist'] ? this.tempTrakingPoses['rightWrist'].position : null;
+              prevElbowPos = this.tempTrakingPoses['rightElbow'] ? this.tempTrakingPoses['rightElbow'].position : null;
+              prevShoulderPos = this.tempTrakingPoses['rightShoulder'] ? this.tempTrakingPoses['rightShoulder'].position : null;
+            } else if (hand === 'left') {
+              wristPos = trakingPoses['leftWrist'] ? trakingPoses['leftWrist'].position : null;
+              elbowPos = trakingPoses['leftElbow'] ? trakingPoses['leftElbow'].position : null;
+              shoulderPos = trakingPoses['leftShoulder'] ? trakingPoses['leftShoulder'].position : null;
+
+              prevWristPos = this.tempTrakingPoses['leftWrist'] ? this.tempTrakingPoses['leftWrist'].position : null;
+              prevElbowPos = this.tempTrakingPoses['leftElbow'] ? this.tempTrakingPoses['leftElbow'].position : null;
+              prevShoulderPos = this.tempTrakingPoses['leftShoulder'] ? this.tempTrakingPoses['leftShoulder'].position : null;
+            }
+
+            const angle = calcArmAngle(wristPos, elbowPos, shoulderPos);
+            const prevAngle = calcArmAngle(prevWristPos, prevElbowPos, prevShoulderPos);
+
+            if (angle - prevAngle >= 75) {
+              this.stopTrading = true;
+              this.tempOptionIdx = -1;
+              this.tempTrakingPoses = {};
+              this.submitAnswerByHand(this.hoveredOptionIdx);
+            }
+
+            console.log('angle, prevAngle', angle, prevAngle)
+          }
         }
       },
       freeAllOption() {
@@ -300,11 +331,11 @@
               optionEl.classList.add('isDroped');
             }
           }
-        })
+        });
         setTimeout(() => {
-          this.answered = false
-          this.showQuestion = false
-          this.currentQuestionId = this.currentQuestionId ? 0 : 1
+          this.answered = false;
+          this.showQuestion = false;
+          this.currentQuestionId = this.currentQuestionId ? 0 : 1;
           // this.currentQuestionId = 0
           this.createQuestion(this.questions[this.currentQuestionId]);
         }, 1000);

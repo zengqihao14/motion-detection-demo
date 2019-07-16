@@ -51,4 +51,30 @@ export const detectPoseInRealTime = (video, canvas, net) => {
         requestAnimationFrame(poseDetectionFrame);
     }
     poseDetectionFrame();
-}
+};
+
+export const angleBetween = (vector1, vector2) => {
+  if (vector1 && vector2) {
+    const sin = (vector1.x * vector2.y) - (vector2.x * vector1.y);
+    const cos = (vector1.x * vector2.x) + (vector1.y * vector2.y);
+    console.log('vector1', vector2)
+    return Math.abs(Math.atan2(sin, cos) * (180 / Math.PI));
+  }
+  return 0;
+};
+
+export const calcArmAngle = (wristPos, elbowPos, shoulderPos) => {
+  if (wristPos && elbowPos && shoulderPos) {
+    const forearm = {
+      x: elbowPos.x - wristPos.x,
+      y: elbowPos.y - wristPos.y
+    };
+    const arm = {
+      x: elbowPos.x - shoulderPos.x,
+      y: elbowPos.y - shoulderPos.y
+    };
+
+    return angleBetween(forearm, arm);
+  }
+  return 0;
+};
