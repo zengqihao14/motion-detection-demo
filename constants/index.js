@@ -1,0 +1,27 @@
+const defaultQuantBytes = 2;
+
+const defaultMobileNetMultiplier = 0.75;
+const defaultMobileNetStride = 16;
+const defaultMobileNetInputResolution = 513;
+
+const defaultResNetMultiplier = 1.0;
+const defaultResNetStride = 32;
+const defaultResNetInputResolution = 257;
+
+export const INPUT_OPTIONS = {
+  architecture: 'MobileNetV1',
+  outputStride: defaultMobileNetStride,
+  inputResolution: defaultMobileNetInputResolution,
+  multiplier: defaultMobileNetMultiplier,
+  quantBytes: defaultQuantBytes
+};
+export const SINGLE_POSE_OPTIONS = {
+  minPoseConfidence: 0.1,
+  minPartConfidence: 0.5,
+};
+export const OUTPUT_OPTIONS = {
+  showVideo: true,
+  showSkeleton: true,
+  showPoints: true,
+  showBoundingBox: false,
+};

@@ -31,7 +31,7 @@
           playsinline
         )
         canvas.detection-canvas(
-          ref="handCanvas"
+          ref="canvasEl"
           :class="isDebug ? 'isDebug' : ''"
         )
     button.inner-button-link(
@@ -41,8 +41,9 @@
 
 <script>
   // import * as posenet from '@tensorflow-models/posenet';
-  import { loadVideo } from '~/utils/video'
-  import { detectPoseInRealTime } from '~/utils/detectPose'
+  import { drawKeypoints } from '~/utils/canvas'
+  import { loadVideo } from '~/utils/video';
+  import { INPUT_OPTIONS, SINGLE_POSE_OPTIONS, OUTPUT_OPTIONS } from '~/constants';
 
   const modelParams = {
     flipHorizontal: true,   // flip e.g for video
@@ -100,12 +101,11 @@
     name: 'main-page',
     data() {
       return {
+        video: null,
+        canvas: null,
         net: null,
+        trakingPoses: {},
         aspect: 1,
-        center: {
-          x: 0,
-          y: 0
-        },
         isDebug: true,
         started: false,
         showQuestion: false,
@@ -126,68 +126,118 @@
         this.currentQuestionId = 0
         this.startVideo();
       },
-      runDetection() {
-        const videoEl = this.$refs.videoEl;
-        const handCanvas = this.$refs.handCanvas;
-        const context = handCanvas.getContext("2d");
-        if (videoEl && handCanvas && this.model) {
-          this.model.detect(videoEl).then(predictions => {
-            // console.log("Predictions: ", predictions);
-            if (!predictions.length) {
-              this.freeAllOption();
+      async poseDetectionFrame() {
+        const ctx = this.canvas.getContext('2d');
+        const flipPoseHorizontal = true;
+        let poses = [];
+
+        ctx.clearRect(0, 0, this.video.width, this.video.height);
+        ctx.save();
+        ctx.scale(-1, 1);
+        ctx.translate(-this.video.width, 0);
+        ctx.drawImage(this.video, 0, 0, this.video.width, this.video.height);
+        ctx.restore();
+
+        const pose = await this.net.estimatePoses(this.video, {
+          flipHorizontal: true,
+          decodingMethod: 'single-person'
+        });
+        if (pose && pose.length) {
+          poses = poses.concat(pose);
+          const score = pose[0].score;
+          const keypoints = pose[0].keypoints;
+          const trakingPoses = {};
+
+          Object.keys(keypoints).forEach(key => {
+            const keypoint = keypoints[key];
+            if (keypoint.part === 'rightWrist') {
+              if (score > 0.51) {
+                trakingPoses['rightWrist'] = keypoint
+              }
+            } else if (keypoint.part === 'leftWrist') {
+              if (score > 0.51) {
+                trakingPoses['leftWrist'] = keypoint
+              }
+            } else if (keypoint.part === 'rightElbow') {
+              if (score > 0.51) {
+                trakingPoses['rightElbow'] = keypoint
+              }
+            } else if (keypoint.part === 'leftElbow') {
+              if (score > 0.51) {
+                trakingPoses['leftElbow'] = keypoint
+              }
             }
-            this.detectPostion(predictions[0]);
-            this.model.renderPredictions(predictions, handCanvas, context, videoEl);
-            requestAnimationFrame(this.runDetection);
           });
+          this.detectPostion(trakingPoses);
+          // poses.forEach(({score, keypoints}) => {
+          //   drawKeypoints(keypoints, ctx);
+          // });
         }
+        requestAnimationFrame(this.poseDetectionFrame);
       },
-      detectPostion(prediction) {
+      detectPoseInRealTime() {
+        this.poseDetectionFrame();
+      },
+      detectPostion(trakingPoses) {
         const bodyEl = this.$refs.bodyEl;
         const startBtnEl = this.$refs.startBtnEl
-        const handCanvas = this.$refs.handCanvas;
-        if (bodyEl && prediction) {
-          const bbox = prediction.bbox
+        if (bodyEl && trakingPoses) {
           const rect = bodyEl.getBoundingClientRect();
           const bodySize = {
             width: rect.width,
             height: rect.height
           }
-          const center = {
-            x: (bbox[2] / 2) + bbox[0],
-            y: (bbox[3] / 2) + bbox[1]
+
+          // if (this.center.x !== 0 && this.center.y !== 0) {
+          //   const offsetX = this.center.x - center.x;
+          //   const offsetY = this.center.y - center.y;
+          //   const question = this.questions[this.currentQuestionId];
+          //   if (question.type === 2) {
+          //     if (Math.abs(offsetX) > 300) {
+          //       if (offsetX > 0) {
+          //         console.log('left')
+          //         this.hoveredOptionIdx = 0
+          //         this.submitAnswerByHand(this.hoveredOptionIdx);
+          //       } else {
+          //         console.log('right')
+          //         this.hoveredOptionIdx = 1
+          //         this.submitAnswerByHand(this.hoveredOptionIdx);
+          //       }
+          //     }
+          //   } else {
+          //     if (Math.abs(offsetY) > 200) {
+          //       if (offsetY > 0) {
+          //         console.log('up')
+          //         if (this.hoveredOptionIdx >= 0) {
+          //           this.submitAnswerByHand(this.hoveredOptionIdx);
+          //         }
+          //       } else {
+          //         // console.log('dowm')
+          //       }
+          //     }
+          //   }
+          // }
+
+          let rightWristScore = 0
+          let leftWristScore = 0
+          let rightWristPosition = null
+          let leftWristPosition = null
+          // 右手
+          if (trakingPoses['rightWrist']) {
+            rightWristScore = trakingPoses['rightWrist'].score || 0
+            rightWristPosition = trakingPoses['rightWrist'].position
           }
-          if (this.center.x !== 0 && this.center.y !== 0) {
-            const offsetX = this.center.x - center.x;
-            const offsetY = this.center.y - center.y;
-            const question = this.questions[this.currentQuestionId];
-            if (question.type === 2) {
-              if (Math.abs(offsetX) > 300) {
-                if (offsetX > 0) {
-                  console.log('left')
-                  this.hoveredOptionIdx = 0
-                  this.submitAnswerByHand(this.hoveredOptionIdx);
-                } else {
-                  console.log('right')
-                  this.hoveredOptionIdx = 1
-                  this.submitAnswerByHand(this.hoveredOptionIdx);
-                }
-              }
-            } else {
-              if (Math.abs(offsetY) > 200) {
-                if (offsetY > 0) {
-                  console.log('up')
-                  if (this.hoveredOptionIdx >= 0) {
-                    this.submitAnswerByHand(this.hoveredOptionIdx);
-                  }
-                } else {
-                  // console.log('dowm')
-                }
-              }
-            }
+          // 左手
+          if (trakingPoses['leftWrist']) {
+            leftWristScore = trakingPoses['leftWrist'].score || 0
+            rightWristPosition = trakingPoses['leftWrist'].position
           }
-          this.center = center
-          this.detectInOption(this.center)
+
+          if (rightWristScore >= leftWristScore) {
+            this.detectInOption(rightWristPosition)
+          } else {
+            this.detectInOption(rightWristPosition)
+          }
         }
       },
       startQuestion() {
@@ -208,24 +258,26 @@
       },
       detectInOption(pos) {
         const optionEls = document.querySelectorAll('.question-option');
-        optionEls.forEach((optionEl, idx) => {
-          const rect = optionEl.getBoundingClientRect();
-          const top = rect.y
-          const left = rect.x
-          const bottom = rect.y + rect.height
-          const right = rect.x + rect.width
-          if (
-            left < pos.x &&
-            right > pos.x
-          ) {
-            this.hoveredOptionIdx = idx;
-            if (!optionEl.classList.contains('isHovered')) {
-              optionEl.classList.add('isHovered');
+        if (pos) {
+          optionEls.forEach((optionEl, idx) => {
+            const rect = optionEl.getBoundingClientRect();
+            const top = rect.y
+            const bottom = rect.y + rect.height
+            const left = rect.x
+            const right = rect.x + rect.width
+            if (
+              left < pos.x &&
+              right > pos.x
+            ) {
+              this.hoveredOptionIdx = idx;
+              if (!optionEl.classList.contains('isHovered')) {
+                optionEl.classList.add('isHovered');
+              }
+            } else {
+              optionEl.classList.remove('isHovered');
             }
-          } else {
-            optionEl.classList.remove('isHovered');
-          }
-        })
+          })
+        }
       },
       freeAllOption() {
         const optionEls = document.querySelectorAll('.question-option');
@@ -283,25 +335,20 @@
     },
     async mounted() {
       const bodyEl = this.$refs.bodyEl;
-      const videoEl = this.$refs.videoEl;
-      const canvasEl = this.$refs.handCanvas;
-      canvasEl.width = bodyEl.offsetWidth;
-      canvasEl.height = bodyEl.offsetHeight;
-      videoEl.width = bodyEl.offsetWidth;
-      videoEl.height = bodyEl.offsetHeight;
+      this.video = this.$refs.videoEl;
+      this.canvas = this.$refs.canvasEl;
+      this.canvas.width = bodyEl.offsetWidth;
+      this.canvas.height = bodyEl.offsetHeight;
+      this.video.width = bodyEl.offsetWidth;
+      this.video.height = bodyEl.offsetHeight;
 
-      this.aspect = canvasEl.width / canvasEl.height;
+      this.aspect = this.canvas.width / this.canvas.height;
 
-      this.net = await posenet.load({
-          architecture: 'MobileNetV1',
-          outputStride: 16,
-          inputResolution: 257,
-          multiplier: 1
-      });
-      if (this.net && videoEl  && canvasEl) {
+      this.net = await posenet.load(INPUT_OPTIONS);
+      if (this.net && this.video  && this.canvas) {
           try {
-              const video = await loadVideo(videoEl);
-              detectPoseInRealTime(video, canvasEl, this.net);
+              const video = await loadVideo(this.video);
+              this.detectPoseInRealTime(video, this.canvas, this.net);
           } catch (e) {
               throw e;
           }
@@ -342,35 +389,6 @@
       display: block
       width: 100%
       height: 100vh
-    .detection-body
-      position: relative
-      box-sizing: border-box
-      width: 100%
-      padding: 0
-      padding-top: 62.25%
-      height: auto
-      border: 1px solid #333
-      margin: 0 auto
-    .detection-video
-      position: absolute
-      top: 0
-      left: 0
-      width: 100%
-      height: 100%
-      z-index: 1
-      display: none
-    .detection-canvas
-      position: absolute
-      top: 0
-      left: 0
-      right: 0
-      bottom: 0
-      width: 100%
-      height: 100%
-      display: none
-      z-index: 1
-      &.isDebug
-        display: block
     .main-content
       box-sizing: border-box
       position: absolute

@@ -18,7 +18,7 @@ const drawPoints = (ctx, points, radius, color) => {
     }
 };
 
-export const drawPoint = (ctx, y, x, r, color) => {
+const drawPoint = (ctx, y, x, r, color) => {
     ctx.beginPath();
     ctx.arc(x, y, r, 0, 2 * Math.PI);
     ctx.fillStyle = color;
