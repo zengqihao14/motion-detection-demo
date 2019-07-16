@@ -394,15 +394,29 @@
           this.currentQuestionId = this.currentQuestionId ? 0 : 1;
           // this.currentQuestionId = 0
           this.createQuestion(this.questions[this.currentQuestionId]);
-        }, 1000);
+        }, 500);
       },
       submitAnswerByHand(targetIdx) {
         console.log('submit targetIdx', targetIdx)
+        const currentQuestion = this.questions[this.currentQuestionId];
+        const type = currentQuestion.type;
         const optionEls = document.querySelectorAll('.question-option');
         optionEls.forEach((optionEl, idx) => {
           if (idx === targetIdx) {
-            if (!optionEl.classList.contains('isSelected')) {
-              optionEl.classList.add('isSelected');
+            if (type === 1) {
+              if (!optionEl.classList.contains('isSelected')) {
+                optionEl.classList.add('isSelected');
+              }
+            } else if (type === 2) {
+              if (targetIdx === 0) {
+                if (!optionEl.classList.contains('isWaving-left')) {
+                  optionEl.classList.add('isWaving-left');
+                }
+              } else {
+                if (!optionEl.classList.contains('isWaving-right')) {
+                  optionEl.classList.add('isWaving-right');
+                }
+              }
             }
           } else {
             if (!optionEl.classList.contains('isDroped')) {
@@ -417,7 +431,7 @@
           // this.currentQuestionId = 0
           this.hoveredOptionIdx = -1
           this.createQuestion(this.questions[this.currentQuestionId]);
-        }, 1000);
+        }, 500);
       }
     },
     async mounted() {
@@ -428,7 +442,7 @@
       this.canvas.height = bodyEl.offsetHeight;
       this.video.width = bodyEl.offsetWidth;
       this.video.height = bodyEl.offsetHeight;
-      this.itemHeight = bodyEl.offsetHeight - 120 - 60 - 30;
+      this.itemHeight = bodyEl.offsetHeight - 120 - 100 - 30;
 
       this.aspect = this.canvas.width / this.canvas.height;
 
@@ -539,7 +553,7 @@
         display: block
         width: 100%
         text-align: center
-        font-size: 32px
+        font-size: 42px
         line-height: 60px
         letter-spacing: 3px
         height: 60px
@@ -574,10 +588,16 @@
             margin: 0
           &.isSelected
             animation-fill-mode: both
-            animation: picked 1s ease-in-out
+            animation: picked .56s ease-in-out
+          &.isWaving-left
+            animation-fill-mode: both
+            animation: isWaving-left .56s linear
+          &.isWaving-right
+            animation-fill-mode: both
+            animation: isWaving-right .56s linear
           &.isDroped
             animation-fill-mode: both
-            animation: droped 1s ease-in-out
+            animation: droped .56s ease-in-out
           &.two
             flex: 0.24
 
