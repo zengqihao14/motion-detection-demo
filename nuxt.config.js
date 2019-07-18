@@ -19,10 +19,10 @@ export default {
         src: '/@tensorglow/tfjs.js'
       },
       {
-        src: '/@tensorglow/posenet.js'
+        src: '/@tensorglow/posenet_local.js'
       },
       {
-        src: '/@tensorglow/body-pix.js'
+        src: '/@tensorglow/body-pix_local.js'
       }
     ]
   },
