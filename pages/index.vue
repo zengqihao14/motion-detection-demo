@@ -192,7 +192,7 @@
           const flipPoseHorizontal = true;
           let poses = [];
 
-          ctx.clearRect(0, 0, this.video.width, this.video.height);
+          // ctx.clearRect(0, 0, this.video.width, this.video.height);
           ctx.save();
           ctx.scale(-1, 1);
           ctx.translate(-this.video.width, 0);
@@ -210,7 +210,9 @@
             const keypoints = pose[0].keypoints;
             const trakingPoses = {};
 
-            console.log('pose', pose[0])
+            await poses.forEach(({ score, keypoints }) => {
+              drawKeypoints(keypoints, ctx);
+            });
 
             Object.keys(keypoints).forEach(key => {
               const keypoint = keypoints[key];
@@ -241,9 +243,6 @@
               }
             });
             this.detectPostion(trakingPoses);
-            poses.forEach(({ score, keypoints }) => {
-              drawKeypoints(keypoints, ctx);
-            });
           }
         }
         requestAnimationFrame(this.poseDetectionFrame);
