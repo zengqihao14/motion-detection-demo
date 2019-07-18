@@ -16,7 +16,7 @@
 <script>
   import { mapActions } from 'vuex';
 
-  import { drawKeypoints } from '~/utils/canvas';
+  import { drawKeypoints, drawSkeleton } from '~/utils/canvas';
   import { loadVideo } from '~/utils/video';
   import { INPUT_OPTIONS, SINGLE_POSE_OPTIONS, OUTPUT_OPTIONS, SCORE_THRESHOLDS } from '~/constants';
 
@@ -81,27 +81,37 @@
           const ctx = this.canvas.getContext('2d');
           const flipPoseHorizontal = true;
           let poses = [];
-
-          ctx.clearRect(0, 0, this.video.width, this.video.height);
-          ctx.save();
-          ctx.scale(-1, 1);
-          ctx.translate(-this.video.width, 0);
-          ctx.drawImage(this.video, 0, 0, this.video.width, this.video.height);
-          ctx.restore();
+          let minPoseConfidence;
+          let minPartConfidence;
 
           const pose = await this.net.estimatePoses(this.video, {
             flipHorizontal: flipPoseHorizontal,
             decodingMethod: 'single-person'
           });
 
+          ctx.clearRect(0, 0, this.video.width, this.video.height);
+          if (true) { // if debug show video
+            ctx.save();
+            ctx.scale(-1, 1);
+            ctx.translate(-this.video.width, 0);
+            ctx.drawImage(this.video, 0, 0, this.video.width, this.video.height);
+            ctx.restore();
+          }
+
           if (pose && pose.length && pose[0].score > SCORE_THRESHOLDS.main) {
             poses = poses.concat(pose);
+            minPoseConfidence = +SINGLE_POSE_OPTIONS.minPoseConfidence;
+            minPartConfidence = +SINGLE_POSE_OPTIONS.minPartConfidence;
+
             const score = pose[0].score;
             const keypoints = pose[0].keypoints;
             const trakingPoses = {};
 
-            await poses.forEach(({score, keypoints}) => {
-              drawKeypoints(keypoints, ctx);
+            poses.forEach(({score, keypoints}) => {
+              if (score > minPoseConfidence) {
+                drawKeypoints(keypoints, minPartConfidence, ctx);
+                drawSkeleton(keypoints, minPartConfidence, ctx, 1, posenet);
+              }
             });
 
             Object.keys(keypoints).forEach(key => {

@@ -33,11 +33,15 @@ export const drawSkeleton = (keypoints, minConfidence, ctx, scale = 1, posenet) 
   });
 };
 
-export const drawKeypoints = (keypoints, ctx, scale = 1) => {
+export const drawKeypoints = (keypoints, minConfidence, ctx, scale = 1) => {
   for (let i = 0; i < keypoints.length; i++) {
     const keypoint = keypoints[i];
 
-    const { y, x } = keypoint.position;
+    if (keypoint.score < minConfidence) {
+      continue;
+    }
+
+    const {y, x} = keypoint.position;
     drawPoint(ctx, y * scale, x * scale, 3, color);
   }
 };
