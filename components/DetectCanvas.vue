@@ -1,5 +1,7 @@
 <template lang="pug">
   .detection-body(ref="bodyEl")
+    p(v-if="isLoading") LOADING
+    p(v-if="isStopTrading") STOP
     video.detection-video(
       ref="videoEl"
       autoplay="true"
@@ -12,25 +14,63 @@
 </template>
 
 <script>
-  import { drawKeypoints } from '~/utils/canvas'
+  import { mapActions } from 'vuex';
+
+  import { drawKeypoints } from '~/utils/canvas';
   import { loadVideo } from '~/utils/video';
   import { INPUT_OPTIONS, SINGLE_POSE_OPTIONS, OUTPUT_OPTIONS } from '~/constants';
 
   export default {
     name: 'detect-canvas',
-    data() {
-      return {
-        video: null,
-        canvas: null,
-        net: null,
-        stopTrading: true
-      }
-    },
     components: {
     },
+    data() {
+      return {
+      }
+    },
+    computed: {
+      isLoading() {
+        return this.$store.state.detect.isLoading
+      },
+      isStopTrading() {
+        return this.$store.state.detect.isStopTrading
+      },
+      video() {
+        return this.$store.state.detect.video
+      },
+      canvas() {
+        return this.$store.state.detect.canvas
+      },
+      net() {
+        return this.$store.state.detect.net
+      }
+    },
     methods: {
-      reset() {
-        this.stopTrading = true;
+      ...mapActions({
+        initDetect: 'detect/initDetect',
+        setDetect: 'detect/setDetect',
+        startDetect: 'detect/startDetect',
+        stopDetect: 'detect/stopDetect',
+        setDetectLoading: 'detect/setDetectLoading',
+        unsetDetectLoading: 'detect/unsetDetectLoading'
+      }),
+      detectPostion(trakingPoses) {
+        if (trakingPoses) {
+          let rightWristScore = 0;
+          let leftWristScore = 0;
+          let rightWristPosition = null;
+          let leftWristPosition = null;
+          // 右手
+          if (trakingPoses['rightWrist']) {
+            rightWristScore = trakingPoses['rightWrist'].score || 0;
+            rightWristPosition = trakingPoses['rightWrist'].position;
+          }
+          // 左手
+          if (trakingPoses['leftWrist']) {
+            leftWristScore = trakingPoses['leftWrist'].score || 0;
+            leftWristPosition = trakingPoses['leftWrist'].position;
+          }
+        }
       },
       async poseDetectionFrame() {
         if (!this.stopTrading) {
@@ -38,7 +78,7 @@
           const flipPoseHorizontal = true;
           let poses = [];
 
-          // ctx.clearRect(0, 0, this.video.width, this.video.height);
+          ctx.clearRect(0, 0, this.video.width, this.video.height);
           ctx.save();
           ctx.scale(-1, 1);
           ctx.translate(-this.video.width, 0);
@@ -96,50 +136,46 @@
       detectPoseInRealTime() {
         this.poseDetectionFrame();
       },
-      detectPostion(trakingPoses) {
-        if (trakingPoses) {
-          let rightWristScore = 0;
-          let leftWristScore = 0;
-          let rightWristPosition = null;
-          let leftWristPosition = null;
-          // 右手
-          if (trakingPoses['rightWrist']) {
-            rightWristScore = trakingPoses['rightWrist'].score || 0;
-            rightWristPosition = trakingPoses['rightWrist'].position;
-          }
-          // 左手
-          if (trakingPoses['leftWrist']) {
-            leftWristScore = trakingPoses['leftWrist'].score || 0;
-            leftWristPosition = trakingPoses['leftWrist'].position;
+      async launchDetect() {
+        await this.initDetect()
+        await this.setDetectLoading()
+
+        const bodyEl = this.$refs.bodyEl;
+        const video = this.$refs.videoEl;
+        const canvas = this.$refs.canvasEl;
+        canvas.width = bodyEl.offsetWidth;
+        canvas.height = bodyEl.offsetHeight;
+        video.width = bodyEl.offsetWidth;
+        video.height = bodyEl.offsetHeight;
+
+        const net = await posenet.load(INPUT_OPTIONS);
+
+        if (video  && canvas && net) {
+          try {
+            const loadedVideo = await loadVideo(video);
+
+            await this.setDetect({
+              video: loadedVideo,
+              canvas,
+              net
+            });
+            await this.startDetect();
+            await this.unsetDetectLoading();
+            this.detectPoseInRealTime();
+          } catch (e) {
+            throw e;
           }
         }
       }
     },
     async mounted() {
-      const bodyEl = this.$refs.bodyEl;
-      this.video = this.$refs.videoEl;
-      this.canvas = this.$refs.canvasEl;
-      this.canvas.width = bodyEl.offsetWidth;
-      this.canvas.height = bodyEl.offsetHeight;
-      this.video.width = bodyEl.offsetWidth;
-      this.video.height = bodyEl.offsetHeight;
-
-      this.net = await posenet.load(INPUT_OPTIONS);
-      if (this.net && this.video  && this.canvas) {
-        this.stopTrading = false;
-        try {
-          this.video = await loadVideo(this.video);
-          this.detectPoseInRealTime();
-        } catch (e) {
-          throw e;
-        }
-      }
+      await this.launchDetect();
 
       window.addEventListener('keydown', (e) => {
         if (e.key.toLowerCase() === 'd') {
           this.isDebug = !this.isDebug
         }
-      })
+      });
     }
   }
 </script>
