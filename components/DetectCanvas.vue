@@ -84,19 +84,20 @@
           let minPoseConfidence;
           let minPartConfidence;
 
-          const pose = await this.net.estimatePoses(this.video, {
-            flipHorizontal: flipPoseHorizontal,
+          const personSegmentation = await this.bodyPixNet.estimatePersonSegmentation(this.video, 16, 0.2);
+          const maskBackground = true;
+          const opacity = 1;
+          const maskBlurAmount = 3;
+          const flipHorizontal = true;
+          const maskImage = await bodyPix.toMaskImageData(personSegmentation, maskBackground);
+
+          ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          await bodyPix.drawMask(this.canvas, this.video, maskImage, opacity, maskBlurAmount, flipHorizontal);
+          const imageData = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+          const pose = await this.net.estimatePoses(imageData, {
+            flipHorizontal: false,
             decodingMethod: 'single-person'
           });
-
-          ctx.clearRect(0, 0, this.video.width, this.video.height);
-          if (true) { // if debug show video
-            ctx.save();
-            ctx.scale(-1, 1);
-            ctx.translate(-this.video.width, 0);
-            ctx.drawImage(this.video, 0, 0, this.video.width, this.video.height);
-            ctx.restore();
-          }
 
           if (pose && pose.length && pose[0].score > SCORE_THRESHOLDS.main) {
             poses = poses.concat(pose);
@@ -163,8 +164,9 @@
         video.height = bodyEl.offsetHeight;
 
         const net = await posenet.load(INPUT_OPTIONS);
+        this.bodyPixNet = await bodyPix.load();
 
-        if (video  && canvas && net) {
+        if (video  && canvas && net && this.bodyPixNet) {
           try {
             const loadedVideo = await loadVideo(video);
 

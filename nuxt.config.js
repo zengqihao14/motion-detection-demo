@@ -20,6 +20,9 @@ export default {
       },
       {
         src: '/@tensorglow/posenet.js'
+      },
+      {
+        src: '/@tensorglow/body-pix.js'
       }
     ]
   },
