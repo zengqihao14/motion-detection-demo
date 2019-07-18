@@ -1,3 +1,15 @@
+const isAndroid = () => {
+  return /Android/i.test(navigator.userAgent);
+};
+
+const isiOS = () => {
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+};
+
+export const isMobile = () => {
+  return isAndroid() || isiOS();
+};
+
 export const setupCamera = async (videoEl) => {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       throw new Error('Browser API navigator.mediaDevices.getUserMedia not available');

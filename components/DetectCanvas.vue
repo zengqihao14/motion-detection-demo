@@ -18,7 +18,7 @@
 
   import { drawKeypoints } from '~/utils/canvas';
   import { loadVideo } from '~/utils/video';
-  import { INPUT_OPTIONS, SINGLE_POSE_OPTIONS, OUTPUT_OPTIONS } from '~/constants';
+  import { INPUT_OPTIONS, SINGLE_POSE_OPTIONS, OUTPUT_OPTIONS, SCORE_THRESHOLDS } from '~/constants';
 
   export default {
     name: 'detect-canvas',
@@ -54,6 +54,10 @@
         setDetectLoading: 'detect/setDetectLoading',
         unsetDetectLoading: 'detect/unsetDetectLoading'
       }),
+      reset() {
+        // Important to purge variables and free up GPU memory
+        this.net.dispose();
+      },
       detectPostion(trakingPoses) {
         if (trakingPoses) {
           let rightWristScore = 0;
@@ -90,7 +94,7 @@
             decodingMethod: 'single-person'
           });
 
-          if (pose && pose.length && pose[0].score > 0.7) {
+          if (pose && pose.length && pose[0].score > SCORE_THRESHOLDS.main) {
             poses = poses.concat(pose);
             const score = pose[0].score;
             const keypoints = pose[0].keypoints;
@@ -103,27 +107,27 @@
             Object.keys(keypoints).forEach(key => {
               const keypoint = keypoints[key];
               if (keypoint.part === 'rightWrist') {
-                if (score > 0.56) {
+                if (score > SCORE_THRESHOLDS.rightWrist) {
                   trakingPoses['rightWrist'] = keypoint;
                 }
               } else if (keypoint.part === 'leftWrist') {
-                if (score > 0.56) {
+                if (score > SCORE_THRESHOLDS.leftWrist) {
                   trakingPoses['leftWrist'] = keypoint;
                 }
               } else if (keypoint.part === 'rightElbow') {
-                if (score > 0.6) {
+                if (score > SCORE_THRESHOLDS.rightElbow) {
                   trakingPoses['rightElbow'] = keypoint;
                 }
               } else if (keypoint.part === 'leftElbow') {
-                if (score > 0.6) {
+                if (score > SCORE_THRESHOLDS.leftElbow) {
                   trakingPoses['leftElbow'] = keypoint;
                 }
               } else if (keypoint.part === 'rightShoulder') {
-                if (score > 0.6) {
+                if (score > SCORE_THRESHOLDS.rightShoulder) {
                   trakingPoses['rightShoulder'] = keypoint;
                 }
               } else if (keypoint.part === 'leftShoulder') {
-                if (score > 0.6) {
+                if (score > SCORE_THRESHOLDS.leftShoulder) {
                   trakingPoses['leftShoulder'] = keypoint;
                 }
               }

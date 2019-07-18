@@ -8,8 +8,18 @@ const defaultResNetMultiplier = 1.0;
 const defaultResNetStride = 32;
 const defaultResNetInputResolution = 257;
 
+export const SCORE_THRESHOLDS = {
+  main: 0.7,
+  rightWrist: 0.56,
+  leftWrist: 0.56,
+  rightElbow: 0.6,
+  leftElbow: 0.6,
+  rightShoulder: 0.6,
+  leftShoulder: 0.6
+};
+
 export const INPUT_OPTIONS = {
-  architecture: 'MobileNetV1',
+  architecture: 'ResNet50', // MobileNetV1, ResNet50
   outputStride: defaultMobileNetStride,
   inputResolution: defaultMobileNetInputResolution,
   multiplier: defaultMobileNetMultiplier,

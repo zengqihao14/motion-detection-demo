@@ -1,15 +1,3 @@
-const isAndroid = () => {
-  return /Android/i.test(navigator.userAgent);
-};
-
-const isiOS = () => {
-  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
-};
-
-export const isMobile = () => {
-  return isAndroid() || isiOS();
-};
-
 const color = 'aqua';
 const boundingBoxColor = 'red';
 const lineWidth = 2;
