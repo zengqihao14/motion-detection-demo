@@ -47,26 +47,29 @@
   import { calcArmAngle, detectHandState, detectOverSholder, detectWaving } from '~/utils/detectPose';
   import { INPUT_OPTIONS, SINGLE_POSE_OPTIONS, OUTPUT_OPTIONS } from '~/constants';
 
-  const modelParams = {
-    flipHorizontal: true,   // flip e.g for video
-    maxNumBoxes: 2,        // maximum number of boxes to detect
-    iouThreshold: 0.5,      // ioU threshold for non-max suppression
-    scoreThreshold: 0.7,    // confidence threshold for predictions.
-  };
-
   const QUESTION_LIST = [
     {
-      title: '燕子是不是很美??',
-      type: 2,
+      title: '燕子是不是不美????',
+      type: 1,
       options: [
         {
           label: 'A',
-          text: '是',
+          text: '美',
           val: 1
         },
         {
           label: 'B',
-          text: '是',
+          text: '美',
+          val: 1
+        },
+        {
+          label: 'C',
+          text: '美',
+          val: 1
+        },
+        {
+          label: 'D',
+          text: '美',
           val: 1
         },
       ]
@@ -98,6 +101,51 @@
       ]
     }
   ];
+
+  // const QUESTION_LIST = [
+  //   {
+  //     title: '燕子是不是很美??',
+  //     type: 2,
+  //     options: [
+  //       {
+  //         label: 'A',
+  //         text: '是',
+  //         val: 1
+  //       },
+  //       {
+  //         label: 'B',
+  //         text: '是',
+  //         val: 1
+  //       },
+  //     ]
+  //   },
+  //   {
+  //     title: '燕子是不是很美????',
+  //     type: 1,
+  //     options: [
+  //       {
+  //         label: 'A',
+  //         text: '是',
+  //         val: 1
+  //       },
+  //       {
+  //         label: 'B',
+  //         text: '是',
+  //         val: 1
+  //       },
+  //       {
+  //         label: 'C',
+  //         text: '是',
+  //         val: 1
+  //       },
+  //       {
+  //         label: 'D',
+  //         text: '是',
+  //         val: 1
+  //       },
+  //     ]
+  //   }
+  // ];
 
   export default {
     name: 'main-page',
@@ -155,11 +203,14 @@
             flipHorizontal: flipPoseHorizontal,
             decodingMethod: 'single-person'
           });
-          if (pose && pose.length) {
+
+          if (pose && pose.length && pose[0].score > 0.7) {
             poses = poses.concat(pose);
             const score = pose[0].score;
             const keypoints = pose[0].keypoints;
             const trakingPoses = {};
+
+            console.log('pose', pose[0])
 
             Object.keys(keypoints).forEach(key => {
               const keypoint = keypoints[key];
@@ -444,13 +495,16 @@
       this.video.height = bodyEl.offsetHeight;
       this.itemHeight = bodyEl.offsetHeight - 120 - 100 - 30;
 
+      window.myCanvas = this.canvas;
+
       this.aspect = this.canvas.width / this.canvas.height;
 
       this.net = await posenet.load(INPUT_OPTIONS);
       if (this.net && this.video  && this.canvas) {
           try {
-              const video = await loadVideo(this.video);
-              this.detectPoseInRealTime(video, this.canvas, this.net);
+              this.video = await loadVideo(this.video);
+              console.log('this.video', this.video)
+              this.detectPoseInRealTime();
           } catch (e) {
               throw e;
           }

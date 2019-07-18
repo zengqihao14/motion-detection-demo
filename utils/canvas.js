@@ -29,7 +29,7 @@ export const drawKeypoints = (keypoints, ctx, scale = 1) => {
     for (let i = 0; i < keypoints.length; i++) {
         const keypoint = keypoints[i];
 
-        const {y, x} = keypoint.position;
+        const { y, x } = keypoint.position;
         drawPoint(ctx, y * scale, x * scale, 3, color);
     }
 };
