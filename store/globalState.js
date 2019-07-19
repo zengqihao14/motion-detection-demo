@@ -1,3 +1,5 @@
+import { QUESTIONS } from '~/constants/question';
+
 const INIT_GLOBAL_STATE = 'INIT_GLOBAL_STATE';
 const UPDATE_QUESTION_ID = 'UPDATE_QUESTION_ID';
 const UPDATE_SELECTED_OPTION_ID = 'UPDATE_SELECTED_OPTION_ID';
@@ -8,8 +10,9 @@ const UNSET_GLOBAL_DEBUG = 'UNSET_GLOBAL_DEBUG';
 
 export const state = () => ({
   isStarting: false,
-  currentQuestionId: null,
-  selectedOptionId: null,
+  questions: QUESTIONS,
+  currentQuestionId: 0,
+  selectedOptionId: -1,
   isBusy: false,
   isDebug: false
 });
@@ -18,8 +21,9 @@ export const actions = {
   initGlobalState({commit}) {
     commit(INIT_GLOBAL_STATE, {
       isStarting: false,
-      currentQuestionId: null,
-      selectedOptionId: null,
+      questions: QUESTIONS,
+      currentQuestionId: 0,
+      selectedOptionId: -1,
       isBusy: false,
       isDebug: false
     });

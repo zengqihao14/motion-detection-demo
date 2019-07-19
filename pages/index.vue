@@ -2,6 +2,7 @@
   .inner-page-container
     h1.inner-page-title Motion Detection DEMO
     .inner-page-contents
+      question
       detect-canvas
     button.inner-button-link(
       @click="reset"
@@ -10,6 +11,7 @@
 
 <script>
   import { mapActions } from 'vuex';
+  import Question from '~/components/Question';
   import DetectCanvas from '~/components/DetectCanvas';
 
   export default {
@@ -38,6 +40,7 @@
       },
     },
     components: {
+      Question,
       DetectCanvas
     },
     methods: {
