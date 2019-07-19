@@ -81,6 +81,8 @@
         initGlobalState: 'globalState/initGlobalState',
         resetGlobalState: 'globalState/resetGlobalState',
         updateGlobalStage: 'globalState/updateGlobalStage',
+        setGlobalBusy: 'globalState/setGlobalBusy',
+        unsetGlobalBusy: 'globalState/unsetGlobalBusy',
         setGlobalDebug: 'globalState/setGlobalDebug',
         unsetGlobalDebug: 'globalState/unsetGlobalDebug',
         updateCurrentQuestionId: 'globalState/updateCurrentQuestionId',
@@ -124,12 +126,14 @@
         this.updateGlobalStage(STAGE.QUIZ);
       },
       submitOption(idx) {
-        const questionIdx = this.currentQuestionId;
-        this.stopDetect();
-        console.log('submit questionIdx-optionId', questionIdx, idx);
-        const score = this.questions[questionIdx].options[idx].val;
-        this.updateUserScore(score);
-        setTimeout(this.newQuestion, 1000);
+        if (!this.isBusy) {
+          const questionIdx = this.currentQuestionId;
+          this.stopDetect();
+          this.setGlobalBusy();
+          const score = this.questions[questionIdx].options[idx].val;
+          this.updateUserScore(score);
+          setTimeout(this.newQuestion, 1000);
+        }
       },
       bindKeydown(e) {
         if (e.key.toLowerCase() === 'd') {

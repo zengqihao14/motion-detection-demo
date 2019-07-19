@@ -36,8 +36,8 @@
         return this.$store.state.detect.isLoading
       },
       // GlobalState
-      isStarting() {
-        return this.$store.state.globalState.isStarting
+      stage() {
+        return this.$store.state.globalState.stage
       },
       isBusy() {
         return this.$store.state.globalState.isBusy
