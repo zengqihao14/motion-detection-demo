@@ -6,7 +6,7 @@ export const QUESTIONS = [
       {
         label: 'A',
         text: '美',
-        val: 1
+        val: 0
       },
       {
         label: 'B',
@@ -21,7 +21,7 @@ export const QUESTIONS = [
       {
         label: 'D',
         text: '美',
-        val: 1
+        val: 0
       },
     ]
   },
@@ -32,7 +32,7 @@ export const QUESTIONS = [
       {
         label: 'A',
         text: '美!',
-        val: 1
+        val: 0
       },
       {
         label: 'B',
@@ -42,7 +42,7 @@ export const QUESTIONS = [
       {
         label: 'C',
         text: '美!',
-        val: 1
+        val: 0
       },
       {
         label: 'D',
@@ -63,12 +63,12 @@ export const QUESTIONS = [
       {
         label: 'B',
         text: '是',
-        val: 1
+        val: 0
       },
       {
         label: 'C',
         text: '是',
-        val: 1
+        val: 0
       },
       {
         label: 'D',

@@ -2,7 +2,6 @@
   .question-body(
     ref="bodyEl"
     v-if="question"
-    :class="isDebug ? 'isDebug' : ''"
   )
     h3.question-title {{question.title}}
     .question-option-wrapper
@@ -91,12 +90,6 @@
     width: 100%
     height: 100%
     overflow: hidden
-    background-color: #DDD
-    transition: opacity .38s ease-in-out
-    opacity: 1
-    z-index: 5
-    &.isDebug
-      opacity: .7
     .question-title
       position: relative
       box-sizing: border-box

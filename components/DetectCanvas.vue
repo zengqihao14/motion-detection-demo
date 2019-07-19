@@ -20,6 +20,7 @@
   import { loadVideo } from '~/utils/video';
   import { poseFilter, detectPose, detectArea } from '~/utils/detectPose';
   import { INPUT_OPTIONS, SINGLE_POSE_OPTIONS, OUTPUT_OPTIONS, SCORE_THRESHOLDS } from '~/constants';
+  import { STAGE } from '~/constants/stage';
 
   export default {
     name: 'detect-canvas',
@@ -62,8 +63,8 @@
         return this.$store.state.motionState.leftWristState
       },
       // GlobalState
-      isStarting() {
-        return this.$store.state.globalState.isStarting
+      stage() {
+        return this.$store.state.globalState.stage
       },
       isBusy() {
         return this.$store.state.globalState.isBusy
@@ -121,21 +122,24 @@
           } else if ((this.leftWristState === 'up' || this.leftWristState === 'overSholder') && this.trakingPoses.leftWrist) {
             mainWrist = this.trakingPoses.leftWrist;
           }
-          detectArea(mainWrist, this.trakingPoses, this.canvas, this.updateSelectedOptionId)
 
-          if (this.selectedOptionId >= 0 && mainWrist && mainWrist.part === 'rightWrist') {
-            if (this.rightWristState === 'overSholder') {
-              this.submitOption(this.selectedOptionId);
-            }
-          } else if (this.selectedOptionId >= 0 && mainWrist && mainWrist.part === 'leftWrist') {
-            if (this.leftWristState === 'overSholder') {
-              this.submitOption(this.selectedOptionId);
-            }
-          }
+          if (this.stage === STAGE.QUIZ) {
+            detectArea(mainWrist, this.trakingPoses, this.canvas, this.updateSelectedOptionId)
 
-          if (this.rightWristState === 'down' && this.leftWristState === 'down') {
-            // 双手放下，不选择
-            this.updateSelectedOptionId(-1);
+            if (this.selectedOptionId >= 0 && mainWrist && mainWrist.part === 'rightWrist') {
+              if (this.rightWristState === 'overSholder') {
+                this.submitOption(this.selectedOptionId);
+              }
+            } else if (this.selectedOptionId >= 0 && mainWrist && mainWrist.part === 'leftWrist') {
+              if (this.leftWristState === 'overSholder') {
+                this.submitOption(this.selectedOptionId);
+              }
+            }
+
+            if (this.rightWristState === 'down' && this.leftWristState === 'down') {
+              // 双手放下，不选择
+              this.updateSelectedOptionId(-1);
+            }
           }
         }
       },
@@ -161,6 +165,10 @@
             flipHorizontal: flipPoseHorizontal,
             decodingMethod: 'single-person'
           });
+
+          if (this.isLoading) {
+            await this.unsetDetectLoading();
+          }
 
           if (pose && pose.length && pose[0].score > SCORE_THRESHOLDS.main) {
             poses = poses.concat(pose);
@@ -217,7 +225,6 @@
               bodyNet
             });
             await this.startDetect();
-            await this.unsetDetectLoading();
             this.detectPoseInRealTime();
           } catch (e) {
             throw e;

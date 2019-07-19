@@ -50,7 +50,12 @@ export const actions = {
 
 export const mutations = {
   [INIT_DETECT]: (state, data) => {
-    state = data;
+    state.isLoading = data.isLoading;
+    state.video = data.video;
+    state.canvas = data.canvas;
+    state.net = data.net;
+    state.bodyNet = data.bodyNet;
+    state.isStopTrading = data.isStopTrading;
   },
   [RESET_DETECT]: (state, data) => {
     state.isStopTrading = data.isStopTrading;

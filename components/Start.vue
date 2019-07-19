@@ -1,27 +1,25 @@
 <template lang="pug">
-  .inner-page-container
-    h1.inner-page-title Motion Detection DEMO
-    .inner-page-contents
-      .end-content
-        h2.end-title END
-        button.end-button(@click="handleReturnClick") RETURN
+  .start-content
+    button.start-button(@click="handleClick") START
 </template>
 
 <script>
   export default {
-    name: 'end-page',
+    name: 'end-component',
     data() {
       return {
       }
     },
     computed: {
     },
+    props: {
+      start: Function
+    },
     components: {
     },
     methods: {
-      handleReturnClick() {
-        // this.$router.push('/');
-        location.replace('/')
+      handleClick() {
+        this.start();
       }
     },
     mounted() {
@@ -30,7 +28,7 @@
 </script>
 
 <style lang="sass">
-  .end-content
+  .start-content
     position: absolute
     display: block
     top: 50%
@@ -38,13 +36,7 @@
     transform: translate(-50%, -50%)
     width: 100%
     margin: 0 auto
-    .end-title
-      width: 100%
-      margin: 0 auto 60px
-      font-size: 68px
-      font-weight: bold
-      text-align: center
-    .end-button
+    .start-button
       position: relative
       box-sizing: border-box
       display: block

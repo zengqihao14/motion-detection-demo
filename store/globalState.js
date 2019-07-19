@@ -1,22 +1,21 @@
+import { STAGE } from '~/constants/stage';
 import { QUESTIONS } from '~/constants/question';
 
 const INIT_GLOBAL_STATE = 'INIT_GLOBAL_STATE';
 const RESET_GLOBAL_STATE = 'RESET_GLOBAL_STATE';
 const UPDATE_QUESTION_ID = 'UPDATE_QUESTION_ID';
 const UPDATE_SELECTED_OPTION_ID = 'UPDATE_SELECTED_OPTION_ID';
-const SET_GLOBAL_END = 'SET_GLOBAL_END';
-const UNSET_GLOBAL_END = 'UNSET_GLOBAL_END';
+const UPDATE_GLOBAL_STAGE = 'UPDATE_GLOBAL_STAGE';
 const SET_GLOBAL_BUSY = 'SET_GLOBAL_BUSY';
 const UNSET_GLOBAL_BUSY = 'UNSET_GLOBAL_BUSY';
 const SET_GLOBAL_DEBUG = 'SET_GLOBAL_DEBUG';
 const UNSET_GLOBAL_DEBUG = 'UNSET_GLOBAL_DEBUG';
 
 export const state = () => ({
-  isStarting: false,
+  stage: STAGE.START,
   questions: QUESTIONS,
   currentQuestionId: -1,
   selectedOptionId: -1,
-  isEnd: false,
   isBusy: false,
   isDebug: false
 });
@@ -24,11 +23,10 @@ export const state = () => ({
 export const actions = {
   initGlobalState({commit}) {
     commit(INIT_GLOBAL_STATE, {
-      isStarting: false,
+      stage: STAGE.START,
       questions: QUESTIONS,
       currentQuestionId: -1,
       selectedOptionId: -1,
-      isEnd: false,
       isBusy: false,
       isDebug: false
     });
@@ -45,11 +43,8 @@ export const actions = {
   updateSelectedOptionId({commit}, id) {
     commit(UPDATE_SELECTED_OPTION_ID, id);
   },
-  setGlobalEnd({commit}) {
-    commit(SET_GLOBAL_END);
-  },
-  unsetGlobalEnd({commit}) {
-    commit(UNSET_GLOBAL_END);
+  updateGlobalStage({commit}, stage) {
+    commit(UPDATE_GLOBAL_STAGE, stage);
   },
   setGlobalBusy({commit}) {
     commit(SET_GLOBAL_BUSY);
@@ -67,7 +62,12 @@ export const actions = {
 
 export const mutations = {
   [INIT_GLOBAL_STATE]: (state, data) => {
-    state = data;
+    state.stage = data.stage;
+    state.questions = data.questions;
+    state.currentQuestionId = data.currentQuestionId;
+    state.selectedOptionId = data.selectedOptionId;
+    state.isBusy = data.isBusy;
+    state.isDebug = data.isDebug;
   },
   [RESET_GLOBAL_STATE]: (state, data) => {
     state.selectedOptionId = data.selectedOptionId;
@@ -79,11 +79,8 @@ export const mutations = {
   [UPDATE_SELECTED_OPTION_ID]: (state, id) => {
     state.selectedOptionId = id;
   },
-  [SET_GLOBAL_END]: (state) => {
-    state.isEnd = true;
-  },
-  [UNSET_GLOBAL_END]: (state) => {
-    state.isEnd = false;
+  [UPDATE_GLOBAL_STAGE]: (state, stage) => {
+    state.stage = stage;
   },
   [SET_GLOBAL_BUSY]: (state) => {
     state.isBusy = true;

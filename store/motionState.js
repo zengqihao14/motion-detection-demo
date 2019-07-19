@@ -30,7 +30,9 @@ export const actions = {
 
 export const mutations = {
   [INIT_MOTION_STATE]: (state, data) => {
-    state = data;
+    state.trakingPoses = data.trakingPoses;
+    state.rightWristState = data.rightWristState;
+    state.leftWristState = data.leftWristState;
   },
   [UPDATE_TRAKING_POSES]: (state, trakingPoses) => {
     state.trakingPoses = trakingPoses;
