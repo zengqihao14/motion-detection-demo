@@ -3,13 +3,15 @@
     ref="bodyEl"
     v-if="question"
   )
-    h3.question-title {{question.title}}
+    h3.question-title(
+      :class="stateClassName"
+    ) {{question.title}}
     .question-option-wrapper
       .question-option-content
         .question-option(
           v-for="(option, idx) in question.options"
           :key="idx"
-          :class="selectedOptionId === idx ? 'isHovered' : ''"
+          :class="`${stateClassName} ${selectedOptionId === idx ? 'isHovered' : ''}`"
           :data-idx="idx"
           :data-val="option.val"
           @click="() => handleOptionClick(idx)"
@@ -45,14 +47,33 @@
       isDebug() {
         return this.$store.state.globalState.isDebug
       },
+      // Quiz
       question() {
-        return this.$store.state.globalState.questions[this.$store.state.globalState.currentQuestionId]
+        return this.$store.state.quiz.questions[this.$store.state.quiz.currentQuestionId]
       },
       currentQuestionId() {
-        return this.$store.state.globalState.currentQuestionId
+        return this.$store.state.quiz.currentQuestionId
       },
       selectedOptionId() {
-        return this.$store.state.globalState.selectedOptionId
+        return this.$store.state.quiz.selectedOptionId
+      },
+      isCreating() {
+        return this.$store.state.quiz.isCreating
+      },
+      isReady() {
+        return this.$store.state.quiz.isReady
+      },
+      isSubmitting() {
+        return this.$store.state.quiz.isSubmitting
+      },
+      stateClassName() {
+        if (this.isCreating) {
+          return 'isCreating';
+        } else if (this.isReady) {
+          return 'isReady';
+        } else if (this.isSubmitting) {
+          return 'isSubmitting';
+        }
       }
     },
     props: {

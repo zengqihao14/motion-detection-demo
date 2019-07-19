@@ -54,11 +54,21 @@
       isDebug() {
         return this.$store.state.globalState.isDebug
       },
+      // Quiz
       questions() {
-        return this.$store.state.globalState.questions
+        return this.$store.state.quiz.questions
       },
       currentQuestionId() {
-        return this.$store.state.globalState.currentQuestionId
+        return this.$store.state.quiz.currentQuestionId
+      },
+      isCreating() {
+        return this.$store.state.quiz.isCreating
+      },
+      isReady() {
+        return this.$store.state.quiz.isReady
+      },
+      isSubmitting() {
+        return this.$store.state.quiz.isSubmitting
       },
       // Detect
       isLoading() {
@@ -85,7 +95,16 @@
         unsetGlobalBusy: 'globalState/unsetGlobalBusy',
         setGlobalDebug: 'globalState/setGlobalDebug',
         unsetGlobalDebug: 'globalState/unsetGlobalDebug',
-        updateCurrentQuestionId: 'globalState/updateCurrentQuestionId',
+        // Quiz
+        initQuiz: 'quiz/initQuiz',
+        resetQuiz: 'quiz/resetQuiz',
+        updateCurrentQuestionId: 'quiz/updateCurrentQuestionId',
+        setQuizCreating: 'quiz/setQuizCreating',
+        unsetQuizCreating: 'quiz/unsetQuizCreating',
+        setQuizReady: 'quiz/setQuizReady',
+        unsetQuizReady: 'quiz/unsetQuizReady',
+        setQuizSubmitting: 'quiz/setQuizSubmitting',
+        unsetQuizSubmitting: 'quiz/unsetQuizSubmitting',
         // Detect
         initDetect: 'detect/initDetect',
         resetDetect: 'detect/resetDetect',
@@ -99,6 +118,7 @@
       }),
       init() {
         this.initGlobalState();
+        this.initQuiz();
         this.initDetect();
         this.initMotionState();
         this.initUser();
@@ -108,6 +128,7 @@
       },
       reset() {
         this.resetGlobalState();
+        this.resetQuiz();
         this.resetDetect();
         this.initMotionState();
       },
@@ -119,6 +140,11 @@
         } else {
           this.updateCurrentQuestionId(this.currentQuestionId + 1);
           console.log('start new Question: idx', this.currentQuestionId)
+          this.setQuizCreating(); // creating animation
+          setTimeout(() => {
+            this.unsetQuizCreating();
+            this.setQuizReady();
+          }, 1000);
         }
       },
       start() {
@@ -126,10 +152,12 @@
         this.updateGlobalStage(STAGE.QUIZ);
       },
       submitOption(idx) {
-        if (!this.isBusy) {
+        if (!this.isBusy && this.isReady) {
           const questionIdx = this.currentQuestionId;
           this.stopDetect();
           this.setGlobalBusy();
+          this.unsetQuizReady();
+          this.setQuizSubmitting(); // submitting animation
           const score = this.questions[questionIdx].options[idx].val;
           this.updateUserScore(score);
           setTimeout(this.newQuestion, 1000);

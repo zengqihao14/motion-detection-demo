@@ -72,8 +72,12 @@
       isDebug() {
         return this.$store.state.globalState.isDebug
       },
+      // Quiz
       selectedOptionId() {
-        return this.$store.state.globalState.selectedOptionId
+        return this.$store.state.quiz.selectedOptionId
+      },
+      isReady() {
+        return this.$store.state.quiz.isReady
       }
     },
     props: {
@@ -81,8 +85,8 @@
     },
     methods: {
       ...mapActions({
-        // Global
-        updateSelectedOptionId: 'globalState/updateSelectedOptionId',
+        // Quiz
+        updateSelectedOptionId: 'quiz/updateSelectedOptionId',
         // Detect
         initDetect: 'detect/initDetect',
         setDetect: 'detect/setDetect',
@@ -123,7 +127,7 @@
             mainWrist = this.trakingPoses.leftWrist;
           }
 
-          if (this.stage === STAGE.QUIZ) {
+          if (this.stage === STAGE.QUIZ && this.isReady) {
             detectArea(mainWrist, this.trakingPoses, this.canvas, this.updateSelectedOptionId)
 
             if (this.selectedOptionId >= 0 && mainWrist && mainWrist.part === 'rightWrist') {

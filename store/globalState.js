@@ -3,8 +3,6 @@ import { QUESTIONS } from '~/constants/question';
 
 const INIT_GLOBAL_STATE = 'INIT_GLOBAL_STATE';
 const RESET_GLOBAL_STATE = 'RESET_GLOBAL_STATE';
-const UPDATE_QUESTION_ID = 'UPDATE_QUESTION_ID';
-const UPDATE_SELECTED_OPTION_ID = 'UPDATE_SELECTED_OPTION_ID';
 const UPDATE_GLOBAL_STAGE = 'UPDATE_GLOBAL_STAGE';
 const SET_GLOBAL_BUSY = 'SET_GLOBAL_BUSY';
 const UNSET_GLOBAL_BUSY = 'UNSET_GLOBAL_BUSY';
@@ -24,9 +22,6 @@ export const actions = {
   initGlobalState({commit}) {
     commit(INIT_GLOBAL_STATE, {
       stage: STAGE.START,
-      questions: QUESTIONS,
-      currentQuestionId: -1,
-      selectedOptionId: -1,
       isBusy: false,
       isDebug: false
     });
@@ -36,12 +31,6 @@ export const actions = {
       selectedOptionId: -1,
       isBusy: false,
     });
-  },
-  updateCurrentQuestionId({commit}, id) {
-    commit(UPDATE_QUESTION_ID, id);
-  },
-  updateSelectedOptionId({commit}, id) {
-    commit(UPDATE_SELECTED_OPTION_ID, id);
   },
   updateGlobalStage({commit}, stage) {
     commit(UPDATE_GLOBAL_STAGE, stage);
@@ -63,21 +52,11 @@ export const actions = {
 export const mutations = {
   [INIT_GLOBAL_STATE]: (state, data) => {
     state.stage = data.stage;
-    state.questions = data.questions;
-    state.currentQuestionId = data.currentQuestionId;
-    state.selectedOptionId = data.selectedOptionId;
     state.isBusy = data.isBusy;
     state.isDebug = data.isDebug;
   },
   [RESET_GLOBAL_STATE]: (state, data) => {
-    state.selectedOptionId = data.selectedOptionId;
     state.isBusy = data.isBusy;
-  },
-  [UPDATE_QUESTION_ID]: (state, id) => {
-    state.currentQuestionId = id;
-  },
-  [UPDATE_SELECTED_OPTION_ID]: (state, id) => {
-    state.selectedOptionId = id;
   },
   [UPDATE_GLOBAL_STAGE]: (state, stage) => {
     state.stage = stage;
