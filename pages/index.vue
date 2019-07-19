@@ -2,8 +2,12 @@
   .inner-page-container
     h1.inner-page-title Motion Detection DEMO
     .inner-page-contents
-      question
-      detect-canvas
+      question(
+        :submitOption="submitOption"
+      )
+      detect-canvas(
+        :submitOption="submitOption"
+      )
     button.inner-button-link(
       @click="reset"
     ) RESET
@@ -31,13 +35,19 @@
       isDebug() {
         return this.$store.state.globalState.isDebug
       },
+      questions() {
+        return this.$store.state.globalState.questions
+      },
+      currentQuestionId() {
+        return this.$store.state.globalState.currentQuestionId
+      },
       // Detect
       isLoading() {
         return this.$store.state.detect.isLoading
       },
       isStopTrading() {
         return this.$store.state.detect.isStopTrading
-      },
+      }
     },
     components: {
       Question,
@@ -47,21 +57,52 @@
       ...mapActions({
         // Global
         initGlobalState: 'globalState/initGlobalState',
+        resetGlobalState: 'globalState/resetGlobalState',
+        setGlobalEnd: 'globalState/setGlobalEnd',
+        unsetGlobalEnd: 'globalState/unsetGlobalEnd',
         setGlobalDebug: 'globalState/setGlobalDebug',
         unsetGlobalDebug: 'globalState/unsetGlobalDebug',
+        updateCurrentQuestionId: 'globalState/updateCurrentQuestionId',
         // Detect
         initDetect: 'detect/initDetect',
+        resetDetect: 'detect/resetDetect',
         startDetect: 'detect/startDetect',
         stopDetect: 'detect/stopDetect',
         // MotionState
         initMotionState: 'motionState/updateTrakingPoses'
       }),
+      init() {
+        this.initGlobalState();
+        this.initDetect();
+        this.initMotionState();
+      },
       reset() {
-
-      }
-    },
-    async mounted() {
-      window.addEventListener('keydown', (e) => {
+        this.resetGlobalState();
+        this.resetDetect();
+        this.initMotionState();
+      },
+      newQuestion() {
+        this.reset();
+        if (this.currentQuestionId === this.questions.length - 1) {
+          this.setGlobalEnd();
+          console.log('end');
+          location.replace('/end')
+          // this.$router.push('/end');
+        } else {
+          this.updateCurrentQuestionId(this.currentQuestionId + 1);
+          console.log('start new Question: idx', this.currentQuestionId)
+        }
+      },
+      start() {
+        this.newQuestion();
+      },
+      submitOption(idx) {
+        const questionIdx = this.currentQuestionId;
+        this.stopDetect();
+        console.log('submit questionIdx-optionId', questionIdx, idx);
+        setTimeout(this.newQuestion, 1000);
+      },
+      bindKeydown(e) {
         if (e.key.toLowerCase() === 'd') {
           if (this.isDebug) {
             this.unsetGlobalDebug();
@@ -76,40 +117,21 @@
             this.stopDetect();
           }
         }
-      });
+      }
+    },
+    async mounted() {
+      await this.init();
+      await this.start();
+
+      window.addEventListener('keydown', this.bindKeydown);
+    },
+    beforeDestroy() {
+      window.removeEventListener('keydown', this.bindKeydown);
     }
   }
 </script>
 
 <style lang="sass">
-  .inner-page-container
-    position: relative
-    box-sizing: border-box
-    padding: 0
-    margin: 0 auto
-    min-height: 100vh
-    display: flex
-    flex-direction: column
-    text-align: center
-    .inner-page-title
-      box-sizing: border-box
-      position: absolute
-      display: block
-      padding: 3px 8px
-      font-size: 14px
-      font-weight: bold
-      color: #FFF
-      background-color: #333
-      width: 100%
-      z-index: 10
-    .inner-page-contents
-      position: relative
-      box-sizing: border-box
-      display: block
-      width: 100%
-      height: auto
-      padding: 0
-      padding-top: 56.25%
     .inner-button-link
       position: absolute
       box-sizing: border-box

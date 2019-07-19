@@ -1,4 +1,5 @@
 const INIT_DETECT = 'INIT_DETECT';
+const RESET_DETECT = 'RESET_DETECT';
 const SET_DETECT = 'SET_DETECT';
 const SET_DETECT_LOADING = 'SET_DETECT_LOADING';
 const UNSET_DETECT_LOADING = 'UNSET_DETECT_LOADING';
@@ -25,6 +26,11 @@ export const actions = {
       isStopTrading: true
     });
   },
+  resetDetect({commit}) {
+    commit(RESET_DETECT, {
+      isStopTrading: false
+    });
+  },
   setDetect({commit}, { video, canvas, net, bodyNet }) {
     commit(SET_DETECT, { video, canvas, net, bodyNet });
   },
@@ -45,6 +51,9 @@ export const actions = {
 export const mutations = {
   [INIT_DETECT]: (state, data) => {
     state = data;
+  },
+  [RESET_DETECT]: (state, data) => {
+    state.isStopTrading = data.isStopTrading;
   },
   [SET_DETECT]: (state, data) => {
     state.video = data.video;

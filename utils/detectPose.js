@@ -74,10 +74,7 @@ export const detectHandState = (wristPos, elbowPos, shoulderPos) => {
 };
 
 export const detectOverSholder = (wristPos, elbowPos, shoulderPos) => {
-  if (shoulderPos.y > elbowPos.y) {
-    return elbowPos.y > wristPos.y ? true : false;
-  }
-  return false;
+  return shoulderPos.y > elbowPos.y;
 };
 
 export const detectWaving = (wristPos, prevWristPos, hand) => {

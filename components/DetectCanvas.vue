@@ -75,6 +75,9 @@
         return this.$store.state.globalState.selectedOptionId
       }
     },
+    props: {
+      submitOption: Function
+    },
     methods: {
       ...mapActions({
         // Global
@@ -99,27 +102,36 @@
         if (this.trakingPoses) {
           // 右手
           if (this.trakingPoses.rightWrist) {
-            const rightWrist = this.trakingPoses.rightWrist;
             detectPose(this.trakingPoses, 'right', this.canvas, this.updateRightWristState)
           }
           // 左手
           if (this.trakingPoses.leftWrist) {
-            const leftWrist = this.trakingPoses.leftWrist;
             detectPose(this.trakingPoses, 'left', this.canvas, this.updateLeftWristState)
           }
 
           let mainWrist = null;
-          if (this.rightWristState === 'up' && this.leftWristState === 'up') {
+          if ((this.rightWristState === 'up' || this.rightWristState === 'overSholder') &&
+            (this.leftWristState === 'up' || this.leftWristState === 'overSholder')) {
             if (this.trakingPoses.rightWrist && this.trakingPoses.leftWrist) {
               mainWrist = this.trakingPoses.rightWrist.position.y < this.trakingPoses.leftWrist.position.y ?
                 this.trakingPoses.rightWrist :  this.trakingPoses.leftWrist
             }
-          } else if (this.rightWristState === 'up' && this.trakingPoses.rightWrist) {
+          } else if ((this.rightWristState === 'up' || this.rightWristState === 'overSholder') && this.trakingPoses.rightWrist) {
             mainWrist = this.trakingPoses.rightWrist;
-          } else if (this.leftWristState === 'up' && this.trakingPoses.leftWrist) {
+          } else if ((this.leftWristState === 'up' || this.leftWristState === 'overSholder') && this.trakingPoses.leftWrist) {
             mainWrist = this.trakingPoses.leftWrist;
           }
           detectArea(mainWrist, this.trakingPoses, this.canvas, this.updateSelectedOptionId)
+
+          if (this.selectedOptionId >= 0 && mainWrist && mainWrist.part === 'rightWrist') {
+            if (this.rightWristState === 'overSholder') {
+              this.submitOption(this.selectedOptionId);
+            }
+          } else if (this.selectedOptionId >= 0 && mainWrist && mainWrist.part === 'leftWrist') {
+            if (this.leftWristState === 'overSholder') {
+              this.submitOption(this.selectedOptionId);
+            }
+          }
 
           if (this.rightWristState === 'down' && this.leftWristState === 'down') {
             // 双手放下，不选择

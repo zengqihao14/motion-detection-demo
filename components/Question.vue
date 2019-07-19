@@ -13,6 +13,7 @@
           :class="selectedOptionId === idx ? 'isHovered' : ''"
           :data-idx="idx"
           :data-val="option.val"
+          @click="() => handleOptionClick(idx)"
         )
           p.question-option-text {{option.text}}
 </template>
@@ -55,6 +56,9 @@
         return this.$store.state.globalState.selectedOptionId
       }
     },
+    props: {
+      submitOption: Function
+    },
     methods: {
       ...mapActions({
         // Detect
@@ -64,6 +68,9 @@
         setDetectLoading: 'detect/setDetectLoading',
         unsetDetectLoading: 'detect/unsetDetectLoading'
       }),
+      handleOptionClick(idx) {
+        this.submitOption(idx);
+      }
     },
     mounted() {
     }
@@ -108,7 +115,7 @@
       width: 100%
       margin: 0
       padding: 0
-      padding-top: calc(56.25% - 150px)
+      padding-top: calc(56.25% - 200px)
       .question-option-content
         position: absolute
         box-sizing: border-box
