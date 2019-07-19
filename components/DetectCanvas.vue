@@ -104,6 +104,9 @@
         this.net.dispose();
       },
       handlePose() {
+        const prevRightWristState = this.rightWristState;
+        const prevLeftWristState = this.leftWristState;
+
         if (this.trakingPoses) {
           // 右手
           if (this.trakingPoses.rightWrist) {
@@ -131,11 +134,11 @@
             detectArea(mainWrist, this.trakingPoses, this.canvas, this.updateSelectedOptionId)
 
             if (this.selectedOptionId >= 0 && mainWrist && mainWrist.part === 'rightWrist') {
-              if (this.rightWristState === 'overSholder') {
+              if (this.rightWristState === 'overSholder' && prevRightWristState !== 'overSholder') {
                 this.submitOption(this.selectedOptionId);
               }
             } else if (this.selectedOptionId >= 0 && mainWrist && mainWrist.part === 'leftWrist') {
-              if (this.leftWristState === 'overSholder') {
+              if (this.leftWristState === 'overSholder'  && prevLeftWristState !== 'overSholder') {
                 this.submitOption(this.selectedOptionId);
               }
             }
