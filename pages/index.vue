@@ -9,6 +9,7 @@
 </template>
 
 <script>
+  import { mapActions } from 'vuex';
   import DetectCanvas from '~/components/DetectCanvas';
 
   export default {
@@ -17,15 +18,62 @@
       return {
       }
     },
+    computed: {
+      // GlobalState
+      isStarting() {
+        return this.$store.state.globalState.isStarting
+      },
+      isBusy() {
+        return this.$store.state.globalState.isBusy
+      },
+      isDebug() {
+        return this.$store.state.globalState.isDebug
+      },
+      // Detect
+      isLoading() {
+        return this.$store.state.detect.isLoading
+      },
+      isStopTrading() {
+        return this.$store.state.detect.isStopTrading
+      },
+    },
     components: {
       DetectCanvas
     },
     methods: {
+      ...mapActions({
+        // Global
+        initGlobalState: 'globalState/initGlobalState',
+        setGlobalDebug: 'globalState/setGlobalDebug',
+        unsetGlobalDebug: 'globalState/unsetGlobalDebug',
+        // Detect
+        initDetect: 'detect/initDetect',
+        startDetect: 'detect/startDetect',
+        stopDetect: 'detect/stopDetect',
+        // MotionState
+        initMotionState: 'motionState/updateTrakingPoses'
+      }),
       reset() {
 
       }
     },
     async mounted() {
+      window.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'd') {
+          if (this.isDebug) {
+            this.unsetGlobalDebug();
+          } else {
+            this.setGlobalDebug();
+          }
+        }
+        if (e.key.toLowerCase() === 't') {
+          if (this.isStopTrading) {
+            this.startDetect();
+          } else {
+            this.stopDetect();
+          }
+        }
+      });
     }
   }
 </script>

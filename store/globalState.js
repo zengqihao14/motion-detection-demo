@@ -3,12 +3,15 @@ const UPDATE_QUESTION_ID = 'UPDATE_QUESTION_ID';
 const UPDATE_SELECTED_OPTION_ID = 'UPDATE_SELECTED_OPTION_ID';
 const SET_GLOBAL_BUSY = 'SET_GLOBAL_BUSY';
 const UNSET_GLOBAL_BUSY = 'UNSET_GLOBAL_BUSY';
+const SET_GLOBAL_DEBUG = 'SET_GLOBAL_DEBUG';
+const UNSET_GLOBAL_DEBUG = 'UNSET_GLOBAL_DEBUG';
 
 export const state = () => ({
   isStarting: false,
   currentQuestionId: null,
   selectedOptionId: null,
-  isBusy: false
+  isBusy: false,
+  isDebug: false
 });
 
 export const actions = {
@@ -17,7 +20,8 @@ export const actions = {
       isStarting: false,
       currentQuestionId: null,
       selectedOptionId: null,
-      isBusy: false
+      isBusy: false,
+      isDebug: false
     });
   },
   updateCurrentQuestionId({commit}, id) {
@@ -29,8 +33,14 @@ export const actions = {
   setGlobalBusy({commit}) {
     commit(SET_GLOBAL_BUSY);
   },
-  unsetGlobalBust({commit}) {
+  unsetGlobalBusy({commit}) {
     commit(UNSET_GLOBAL_BUSY);
+  },
+  setGlobalDebug({commit}) {
+    commit(SET_GLOBAL_DEBUG);
+  },
+  unsetGlobalDebug({commit}) {
+    commit(UNSET_GLOBAL_DEBUG);
   }
 };
 
@@ -49,5 +59,11 @@ export const mutations = {
   },
   [UNSET_GLOBAL_BUSY]: (state) => {
     state.isBusy = false;
+  },
+  [SET_GLOBAL_DEBUG]: (state) => {
+    state.isDebug = true;
+  },
+  [UNSET_GLOBAL_DEBUG]: (state) => {
+    state.isDebug = false;
   }
 };

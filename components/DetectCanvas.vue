@@ -27,6 +27,8 @@
     },
     data() {
       return {
+        containerWidth: 0,
+        containerHeight: 0
       }
     },
     computed: {
@@ -66,6 +68,9 @@
       isBusy() {
         return this.$store.state.globalState.isBusy
       },
+      isDebug() {
+        return this.$store.state.globalState.isDebug
+      }
     },
     methods: {
       ...mapActions({
@@ -98,7 +103,7 @@
         }
       },
       async poseDetectionFrame() {
-        if (!this.stopTrading) {
+        if (!this.isStopTrading) {
           const ctx = this.canvas.getContext('2d');
           const flipPoseHorizontal = false;
           let poses = [];
@@ -112,9 +117,9 @@
           const flipHorizontal = true;
           const maskImage = await bodyPix.toMaskImageData(personSegmentation, maskBackground);
 
-          ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          ctx.clearRect(0, 0, this.containerWidth, this.containerHeight);
           await bodyPix.drawMask(this.canvas, this.video, maskImage, opacity, maskBlurAmount, flipHorizontal);
-          const imageData = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+          const imageData = ctx.getImageData(0, 0, this.containerWidth, this.containerHeight);
           const pose = await this.net.estimatePoses(imageData, {
             flipHorizontal: flipPoseHorizontal,
             decodingMethod: 'single-person'
@@ -161,10 +166,13 @@
         const bodyEl = this.$refs.bodyEl;
         const video = this.$refs.videoEl;
         const canvas = this.$refs.canvasEl;
-        canvas.width = bodyEl.offsetWidth;
-        canvas.height = bodyEl.offsetHeight;
-        video.width = bodyEl.offsetWidth;
-        video.height = bodyEl.offsetHeight;
+
+        this.containerWidth = bodyEl.offsetWidth;
+        this.containerHeight = bodyEl.offsetHeight;
+        canvas.width = this.containerWidth;
+        canvas.height = this.containerHeight;
+        video.width = this.containerWidth;
+        video.height = this.containerHeight;
 
         const bodyNet = await bodyPix.load();
         const net = await posenet.load(INPUT_OPTIONS);
@@ -190,12 +198,6 @@
     },
     async mounted() {
       await this.launchDetect();
-
-      window.addEventListener('keydown', (e) => {
-        if (e.key.toLowerCase() === 'd') {
-          this.isDebug = !this.isDebug
-        }
-      });
     }
   }
 </script>
