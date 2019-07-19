@@ -18,6 +18,25 @@ const colorMap = {
   leftAnkle: 'rgba(140, 194, 255, 1)',
   rightAnkle: 'rgba(182, 140, 255, 1)',
 };
+const sizeMap = {
+  nose: 3,
+  leftEye: 3,
+  rightEye: 3,
+  leftEar: 3,
+  rightEar: 3,
+  leftShoulder: 10,
+  rightShoulder: 10,
+  leftElbow: 10,
+  rightElbow: 10,
+  leftWrist: 10,
+  rightWrist: 10,
+  leftHip: 10,
+  rightHip: 10,
+  leftKnee: 10,
+  rightKnee: 10,
+  leftAnkle: 10,
+  rightAnkle: 10,
+};
 const skeletonColor = {
   leftForeArm: 'rgba(255, 252, 89, 1)',
   rightForeArm: 'rgba(0, 255, 225, 1)',
@@ -76,16 +95,36 @@ export const drawSkeleton = (keypoints, minConfidence, ctx, scale = 1, posenet) 
   });
 };
 
-export const drawKeypoints = (keypoints, minConfidence, ctx, scale = 1) => {
+export const drawKeypoints = (keypoints, minConfidence, ctx, scale = 1, handState) => {
   for (let i = 0; i < keypoints.length; i++) {
     const keypoint = keypoints[i];
 
     if (keypoint.score < minConfidence) {
       continue;
     }
+    let r = sizeMap[keypoint.part] || 3;
+    let _color = colorMap[keypoint.part] || color;
+
+    if (keypoint.part === 'leftWrist') {
+      if (handState.leftWristState === 'up') {
+        r = 25;
+        _color = 'rgba(61, 255, 245, 1)';
+      } else if (handState.leftWristState === 'overSholder') {
+        r = 25;
+        _color = 'rgba(255, 54, 54, 1)';
+      }
+    } else if (keypoint.part === 'rightWrist') {
+      if (handState.rightWristState === 'up') {
+        r = 25;
+        _color = 'rgba(61, 255, 245, 1)';
+      } else if (handState.rightWristState === 'overSholder') {
+        r = 25;
+        _color = 'rgba(255, 54, 54, 1)';
+      }
+    }
 
     const {y, x} = keypoint.position;
-    drawPoint(ctx, y * scale, x * scale, 10, colorMap[keypoint.part] || color);
+    drawPoint(ctx, y * scale, x * scale, r, _color);
   }
 };
 

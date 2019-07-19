@@ -133,7 +133,11 @@
             // render in Debug Model
             poses.forEach(({score, keypoints}) => {
               if (score > minPoseConfidence) {
-                drawKeypoints(keypoints, minPartConfidence, ctx);
+                const handState = {
+                  rightWristState: this.rightWristState,
+                  leftWristState: this.leftWristState
+                };
+                drawKeypoints(keypoints, minPartConfidence, ctx, 1, handState);
                 drawSkeleton(keypoints, minPartConfidence, ctx, 1, posenet);
               }
             });
