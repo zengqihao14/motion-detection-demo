@@ -18,6 +18,7 @@
 
   import { drawKeypoints, drawSkeleton } from '~/utils/canvas';
   import { loadVideo } from '~/utils/video';
+  import { poseFilter, detectPose } from '~/utils/detectPose';
   import { INPUT_OPTIONS, SINGLE_POSE_OPTIONS, OUTPUT_OPTIONS, SCORE_THRESHOLDS } from '~/constants';
 
   export default {
@@ -29,6 +30,7 @@
       }
     },
     computed: {
+      // Detect
       isLoading() {
         return this.$store.state.detect.isLoading
       },
@@ -43,48 +45,67 @@
       },
       net() {
         return this.$store.state.detect.net
-      }
+      },
+      bodyNet() {
+        return this.$store.state.detect.bodyNet
+      },
+      // MotionState
+      trakingPoses() {
+        return this.$store.state.motionState.trakingPoses
+      },
+      rightWristState() {
+        return this.$store.state.motionState.rightWristState
+      },
+      leftWristState() {
+        return this.$store.state.motionState.leftWristState
+      },
+      // GlobalState
+      isStarting() {
+        return this.$store.state.globalState.isStarting
+      },
+      isBusy() {
+        return this.$store.state.globalState.isBusy
+      },
     },
     methods: {
       ...mapActions({
+        // Detect
         initDetect: 'detect/initDetect',
         setDetect: 'detect/setDetect',
         startDetect: 'detect/startDetect',
         stopDetect: 'detect/stopDetect',
         setDetectLoading: 'detect/setDetectLoading',
-        unsetDetectLoading: 'detect/unsetDetectLoading'
+        unsetDetectLoading: 'detect/unsetDetectLoading',
+        // MotionState
+        updateTrakingPoses: 'motionState/updateTrakingPoses',
+        updateRightWristState: 'motionState/updateRightWristState',
+        updateLeftWristState: 'motionState/updateLeftWristState',
       }),
       reset() {
         // Important to purge variables and free up GPU memory
         this.net.dispose();
       },
-      detectPostion(trakingPoses) {
-        if (trakingPoses) {
-          let rightWristScore = 0;
-          let leftWristScore = 0;
-          let rightWristPosition = null;
-          let leftWristPosition = null;
+      detectPostion() {
+        if (this.trakingPoses) {
           // 右手
-          if (trakingPoses['rightWrist']) {
-            rightWristScore = trakingPoses['rightWrist'].score || 0;
-            rightWristPosition = trakingPoses['rightWrist'].position;
+          if (this.trakingPoses.rightWrist) {
+            const rightWrist = this.trakingPoses.rightWrist;
           }
           // 左手
-          if (trakingPoses['leftWrist']) {
-            leftWristScore = trakingPoses['leftWrist'].score || 0;
-            leftWristPosition = trakingPoses['leftWrist'].position;
+          if (this.trakingPoses.leftWrist) {
+            const leftWrist = this.trakingPoses.leftWrist;
           }
         }
       },
       async poseDetectionFrame() {
         if (!this.stopTrading) {
           const ctx = this.canvas.getContext('2d');
-          const flipPoseHorizontal = true;
+          const flipPoseHorizontal = false;
           let poses = [];
           let minPoseConfidence;
           let minPartConfidence;
 
-          const personSegmentation = await this.bodyPixNet.estimatePersonSegmentation(this.video, 16, 0.2);
+          const personSegmentation = await this.bodyNet.estimatePersonSegmentation(this.video, 16, 0.2);
           const maskBackground = true;
           const opacity = 1;
           const maskBlurAmount = 3;
@@ -95,7 +116,7 @@
           await bodyPix.drawMask(this.canvas, this.video, maskImage, opacity, maskBlurAmount, flipHorizontal);
           const imageData = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
           const pose = await this.net.estimatePoses(imageData, {
-            flipHorizontal: false,
+            flipHorizontal: flipPoseHorizontal,
             decodingMethod: 'single-person'
           });
 
@@ -104,10 +125,7 @@
             minPoseConfidence = +SINGLE_POSE_OPTIONS.minPoseConfidence;
             minPartConfidence = +SINGLE_POSE_OPTIONS.minPartConfidence;
 
-            const score = pose[0].score;
-            const keypoints = pose[0].keypoints;
-            const trakingPoses = {};
-
+            // render in Debug Model
             poses.forEach(({score, keypoints}) => {
               if (score > minPoseConfidence) {
                 drawKeypoints(keypoints, minPartConfidence, ctx);
@@ -115,35 +133,20 @@
               }
             });
 
-            Object.keys(keypoints).forEach(key => {
-              const keypoint = keypoints[key];
-              if (keypoint.part === 'rightWrist') {
-                if (score > SCORE_THRESHOLDS.rightWrist) {
-                  trakingPoses['rightWrist'] = keypoint;
-                }
-              } else if (keypoint.part === 'leftWrist') {
-                if (score > SCORE_THRESHOLDS.leftWrist) {
-                  trakingPoses['leftWrist'] = keypoint;
-                }
-              } else if (keypoint.part === 'rightElbow') {
-                if (score > SCORE_THRESHOLDS.rightElbow) {
-                  trakingPoses['rightElbow'] = keypoint;
-                }
-              } else if (keypoint.part === 'leftElbow') {
-                if (score > SCORE_THRESHOLDS.leftElbow) {
-                  trakingPoses['leftElbow'] = keypoint;
-                }
-              } else if (keypoint.part === 'rightShoulder') {
-                if (score > SCORE_THRESHOLDS.rightShoulder) {
-                  trakingPoses['rightShoulder'] = keypoint;
-                }
-              } else if (keypoint.part === 'leftShoulder') {
-                if (score > SCORE_THRESHOLDS.leftShoulder) {
-                  trakingPoses['leftShoulder'] = keypoint;
-                }
+            poseFilter(pose, this.updateTrakingPoses);
+
+            if (this.trakingPoses) {
+              // 右手
+              if (this.trakingPoses.rightWrist) {
+                const rightWrist = this.trakingPoses.rightWrist;
+                detectPose(this.trakingPoses, 'right', this.updateRightWristState)
               }
-            });
-            this.detectPostion(trakingPoses);
+              // 左手
+              if (this.trakingPoses.leftWrist) {
+                const leftWrist = this.trakingPoses.leftWrist;
+                detectPose(this.trakingPoses, 'left', this.updateLeftWristState)
+              }
+            }
           }
         }
         requestAnimationFrame(this.poseDetectionFrame);
@@ -163,17 +166,18 @@
         video.width = bodyEl.offsetWidth;
         video.height = bodyEl.offsetHeight;
 
+        const bodyNet = await bodyPix.load();
         const net = await posenet.load(INPUT_OPTIONS);
-        this.bodyPixNet = await bodyPix.load();
 
-        if (video  && canvas && net && this.bodyPixNet) {
+        if (video  && canvas && net && bodyNet) {
           try {
             const loadedVideo = await loadVideo(video);
 
             await this.setDetect({
               video: loadedVideo,
               canvas,
-              net
+              net,
+              bodyNet
             });
             await this.startDetect();
             await this.unsetDetectLoading();

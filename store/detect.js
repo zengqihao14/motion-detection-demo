@@ -10,6 +10,7 @@ export const state = () => ({
   video: null,
   canvas: null,
   net: null,
+  bodyNet: null,
   isStopTrading: true
 });
 
@@ -20,11 +21,12 @@ export const actions = {
       video: null,
       canvas: null,
       net: null,
+      bodyNet: null,
       isStopTrading: true
     });
   },
-  setDetect({commit}, { video, canvas, net }) {
-    commit(SET_DETECT, { video, canvas, net });
+  setDetect({commit}, { video, canvas, net, bodyNet }) {
+    commit(SET_DETECT, { video, canvas, net, bodyNet });
   },
   startDetect({commit}) {
     commit(UNSET_DETECT_STOP);
@@ -48,6 +50,7 @@ export const mutations = {
     state.video = data.video;
     state.canvas = data.canvas;
     state.net = data.net;
+    state.bodyNet = data.bodyNet;
   },
   [SET_DETECT_STOP]: (state) => {
     state.isStopTrading = true;
