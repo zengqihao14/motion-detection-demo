@@ -94,8 +94,62 @@ export const detectWaving = (wristPos, prevWristPos, hand) => {
   return false;
 };
 
-export const detectPose = (trakingPoses, hand, updateWristState = () => {}) => {
+export const detectArea = (wrist, trakingPoses, canvas, updateSelectedOptionId = () => {}) => {
+  let idx = -1;
+  // const rightShoulder = trakingPoses.rightShoulder || null;
+  // const leftShoulder = trakingPoses.leftShoulder || null;
+  //
+  // if (wrist && rightShoulder && leftShoulder) {
+  //   const center = rightShoulder.position.x + Math.abs((rightShoulder.position.x - leftShoulder.position.x) / 2)
+  //   if (wrist.position.x < rightShoulder.position.x) {
+  //     idx = 0;
+  //   } else if (wrist.position.x > leftShoulder.position.x) {
+  //     idx = 3;
+  //   } else if (wrist.position.x >= rightShoulder.position.x && wrist.position.x <= center) {
+  //     idx = 1;
+  //   } else if (wrist.position.x > center && wrist.position.x <= leftShoulder.position.x) {
+  //     idx = 2 ;
+  //   }
+  //   updateSelectedOptionId(idx);
+  // }
+  if (wrist && canvas) {
+    const wristPosition = wrist.position;
+    const center = canvas.width / 2;
+    const alpha = 0.7;
+
+    const areaA = [
+      center - alpha * center,
+      center - (alpha * center / 2)
+    ];
+    const areaB = [
+      center - (alpha * center / 2),
+      center
+    ];
+    const areaC = [
+      center,
+      center + (alpha * center / 2)
+    ];
+    const areaD = [
+      center + (alpha * center / 2),
+      center + alpha * center
+    ];
+
+    if (wristPosition.x < areaA[1]) {
+      idx = 0;
+    } else if (wristPosition.x > areaD[0]) {
+      idx = 3;
+    } else if (wristPosition.x >= areaB[0] && wristPosition.x <= areaB[1]) {
+      idx = 1;
+    } else if (wristPosition.x > areaC[0] && wristPosition.x <= areaC[1]) {
+      idx = 2 ;
+    }
+    updateSelectedOptionId(idx);
+  }
+};
+
+export const detectPose = (trakingPoses, hand, canvas, updateWristState = () => {}) => {
   if (trakingPoses && hand) {
+
     let state = '';
     const rightWrist = trakingPoses.rightWrist || null;
     const rightElbow = trakingPoses.rightElbow || null;

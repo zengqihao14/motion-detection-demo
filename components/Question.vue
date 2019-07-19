@@ -10,6 +10,7 @@
         .question-option(
           v-for="(option, idx) in question.options"
           :key="idx"
+          :class="selectedOptionId === idx ? 'isHovered' : ''"
           :data-idx="idx"
           :data-val="option.val"
         )

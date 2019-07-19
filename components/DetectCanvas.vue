@@ -18,7 +18,7 @@
 
   import { drawKeypoints, drawSkeleton } from '~/utils/canvas';
   import { loadVideo } from '~/utils/video';
-  import { poseFilter, detectPose } from '~/utils/detectPose';
+  import { poseFilter, detectPose, detectArea } from '~/utils/detectPose';
   import { INPUT_OPTIONS, SINGLE_POSE_OPTIONS, OUTPUT_OPTIONS, SCORE_THRESHOLDS } from '~/constants';
 
   export default {
@@ -70,10 +70,15 @@
       },
       isDebug() {
         return this.$store.state.globalState.isDebug
+      },
+      selectedOptionId() {
+        return this.$store.state.globalState.selectedOptionId
       }
     },
     methods: {
       ...mapActions({
+        // Global
+        updateSelectedOptionId: 'globalState/updateSelectedOptionId',
         // Detect
         initDetect: 'detect/initDetect',
         setDetect: 'detect/setDetect',
@@ -90,15 +95,35 @@
         // Important to purge variables and free up GPU memory
         this.net.dispose();
       },
-      detectPostion() {
+      handlePose() {
         if (this.trakingPoses) {
           // 右手
           if (this.trakingPoses.rightWrist) {
             const rightWrist = this.trakingPoses.rightWrist;
+            detectPose(this.trakingPoses, 'right', this.canvas, this.updateRightWristState)
           }
           // 左手
           if (this.trakingPoses.leftWrist) {
             const leftWrist = this.trakingPoses.leftWrist;
+            detectPose(this.trakingPoses, 'left', this.canvas, this.updateLeftWristState)
+          }
+
+          let mainWrist = null;
+          if (this.rightWristState === 'up' && this.leftWristState === 'up') {
+            if (this.trakingPoses.rightWrist && this.trakingPoses.leftWrist) {
+              mainWrist = this.trakingPoses.rightWrist.position.y < this.trakingPoses.leftWrist.position.y ?
+                this.trakingPoses.rightWrist :  this.trakingPoses.leftWrist
+            }
+          } else if (this.rightWristState === 'up' && this.trakingPoses.rightWrist) {
+            mainWrist = this.trakingPoses.rightWrist;
+          } else if (this.leftWristState === 'up' && this.trakingPoses.leftWrist) {
+            mainWrist = this.trakingPoses.leftWrist;
+          }
+          detectArea(mainWrist, this.trakingPoses, this.canvas, this.updateSelectedOptionId)
+
+          if (this.rightWristState === 'down' && this.leftWristState === 'down') {
+            // 双手放下，不选择
+            this.updateSelectedOptionId(-1);
           }
         }
       },
@@ -143,19 +168,7 @@
             });
 
             poseFilter(pose, this.updateTrakingPoses);
-
-            if (this.trakingPoses) {
-              // 右手
-              if (this.trakingPoses.rightWrist) {
-                const rightWrist = this.trakingPoses.rightWrist;
-                detectPose(this.trakingPoses, 'right', this.updateRightWristState)
-              }
-              // 左手
-              if (this.trakingPoses.leftWrist) {
-                const leftWrist = this.trakingPoses.leftWrist;
-                detectPose(this.trakingPoses, 'left', this.updateLeftWristState)
-              }
-            }
+            this.handlePose();
           }
         }
         requestAnimationFrame(this.poseDetectionFrame);

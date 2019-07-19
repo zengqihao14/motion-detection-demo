@@ -56,6 +56,7 @@ export const mutations = {
     state.currentQuestionId = id;
   },
   [UPDATE_SELECTED_OPTION_ID]: (state, id) => {
+    console.log('updateSelectedOptionId', id);
     state.selectedOptionId = id;
   },
   [SET_GLOBAL_BUSY]: (state) => {
