@@ -21,6 +21,7 @@
           :init="pageReload"
         )
       detect-canvas(
+        :start="start"
         :submitOption="submitOption"
       )
     button.inner-button-link(
@@ -41,6 +42,7 @@
     name: 'main-page',
     data() {
       return {
+        timerId: null
       }
     },
     computed: {
@@ -124,6 +126,9 @@
         this.initUser();
       },
       pageReload() {
+        if (this.timerId) {
+          clearTimeout(this.timerId);
+        }
         location.replace('/');
       },
       reset() {
@@ -134,15 +139,23 @@
       },
       newQuestion() {
         this.reset();
+        if (this.timerId) {
+          clearTimeout(this.timerId);
+        }
+        // 不选择认为放弃，重新开始
+        this.timerId = setTimeout(this.pageReload, 10 * 1000);
+
         if (this.currentQuestionId === this.questions.length - 1) {
           this.updateGlobalStage(STAGE.END);
           // this.$router.push('/end');
         } else {
           this.updateCurrentQuestionId(this.currentQuestionId + 1);
           console.log('start new Question: idx', this.currentQuestionId)
+          this.setGlobalBusy();
           this.setQuizCreating(); // creating animation
           setTimeout(() => {
             this.unsetQuizCreating();
+            this.unsetGlobalBusy();
             this.setQuizReady();
           }, 700);
         }
@@ -153,6 +166,9 @@
       },
       submitOption(idx) {
         if (!this.isBusy && this.isReady) {
+          if (this.timerId) {
+            clearTimeout(this.timerId);
+          }
           const questionIdx = this.currentQuestionId;
           this.stopDetect();
           this.setGlobalBusy();

@@ -81,6 +81,7 @@
       }
     },
     props: {
+      start: Function,
       submitOption: Function
     },
     methods: {
@@ -130,6 +131,24 @@
             mainWrist = this.trakingPoses.leftWrist;
           }
 
+          if (this.stage === STAGE.START && !this.isBusy) {
+            detectArea(mainWrist, this.trakingPoses, this.canvas, this.updateSelectedOptionId)
+
+            if (this.selectedOptionId >= 0 && mainWrist && mainWrist.part === 'rightWrist') {
+              if (this.rightWristState === 'overSholder' && prevRightWristState !== 'overSholder') {
+                this.start();
+              }
+            } else if (this.selectedOptionId >= 0 && mainWrist && mainWrist.part === 'leftWrist') {
+              if (this.leftWristState === 'overSholder'  && prevLeftWristState !== 'overSholder') {
+                this.start();
+              }
+            }
+
+            if (this.rightWristState === 'down' && this.leftWristState === 'down') {
+              // 双手放下，不选择
+              this.updateSelectedOptionId(-1);
+            }
+          }
           if (this.stage === STAGE.QUIZ && this.isReady) {
             detectArea(mainWrist, this.trakingPoses, this.canvas, this.updateSelectedOptionId)
 
