@@ -158,20 +158,12 @@
           let minPoseConfidence;
           let minPartConfidence;
 
-          const personSegmentation = await this.bodyNet.estimatePersonSegmentation(this.video, 16, 0.2);
+          const personSegmentation = await this.bodyNet.estimatePersonSegmentation(this.video, 16, 0.35);
           const maskBackground = true;
           const opacity = 1;
           const maskBlurAmount = 0;
           const flipHorizontal = true;
           const maskImage = await bodyPix.toMaskImageData(personSegmentation, maskBackground);
-
-          // ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-          // ctx.save();
-          // ctx.scale(-1, 1);
-          // ctx.translate(-this.video.width, 0);
-          // ctx.drawImage(this.video, 0, 0, this.video.width, this.video.height);
-          // // ctx.putImageData(maskImage, 0, 0);
-          // ctx.restore();
 
           await bodyPix.drawMask(this.canvas, this.video, maskImage, opacity, maskBlurAmount, flipHorizontal);
           const imageData = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
@@ -221,17 +213,16 @@
         this.containerWidth = bodyEl.offsetWidth;
         this.containerHeight = bodyEl.offsetHeight;
 
-        canvas.width = this.containerWidth;
-        canvas.height = this.containerHeight;
-        video.width = this.containerWidth;
-        video.height = this.containerHeight;
-
         const bodyNet = await bodyPix.load();
         const net = await posenet.load(INPUT_OPTIONS);
 
         if (video  && canvas && net && bodyNet) {
           try {
             const loadedVideo = await loadVideo(video);
+            video.width = video.videoWidth;
+            video.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
 
             await this.setDetect({
               video: loadedVideo,
@@ -254,7 +245,18 @@
 </script>
 
 <style lang="sass">
-  .detection-body,
+  .detection-body
+    position: absolute
+    box-sizing: border-box
+    display: block
+    top: 0
+    left: 0
+    padding: 0
+    margin: 0
+    width: 100%
+    height: 100%
+    overflow: hidden
+    z-index: 1
   .detection-video,
   .detection-canvas
     position: absolute
@@ -262,12 +264,10 @@
     display: block
     top: 0
     left: 0
-    right: 0
-    bottom: 0
     padding: 0
     margin: 0
-    width: 100%
-    height: 100%
+    width: 640px
+    height: 360px
     overflow: hidden
     z-index: 1
   .detection-video

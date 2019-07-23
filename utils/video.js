@@ -29,9 +29,12 @@ export const setupCamera = async (videoEl) => {
   const stream = await navigator.mediaDevices.getUserMedia({
     'audio': false,
     'video': {
-      deviceId: deviceList[0].deviceId
+      deviceId: deviceList[0].deviceId,
+      width: 640
     },
   });
+  const {width, height} = stream.getTracks()[0].getSettings();
+  console.log(`video size: ${width}x${height}`);
   videoEl.srcObject = stream;
 
   return new Promise((resolve) => {
