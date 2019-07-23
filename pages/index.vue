@@ -144,7 +144,7 @@
           setTimeout(() => {
             this.unsetQuizCreating();
             this.setQuizReady();
-          }, 1000);
+          }, 700);
         }
       },
       start() {
@@ -160,7 +160,7 @@
           this.setQuizSubmitting(); // submitting animation
           const score = this.questions[questionIdx].options[idx].val;
           this.updateUserScore(score);
-          setTimeout(this.newQuestion, 1000);
+          setTimeout(this.newQuestion, 700);
         }
       },
       bindKeydown(e) {

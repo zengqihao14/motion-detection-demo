@@ -49,3 +49,52 @@
   100%
     opacity: .3
     transform: translateY(50px) scale(1)
+
+@keyframes titleCreating
+  0%
+    opacity: 0
+    transform: translateX(10%)
+  75%
+    opacity: 1
+    transform: translateX(0)
+  100%
+    opacity: 1
+    transform: translateX(0)
+
+@keyframes optionCreating
+  0%
+    opacity: 0
+    transform: translateY(10%)
+  100%
+    opacity: 1
+    transform: translateY(0)
+
+@keyframes titleRemoving
+  0%
+    opacity: 1
+    transform: translateX(0)
+  75%
+    opacity: 0
+    transform: translateX(-10%)
+  100%
+    opacity: 0
+    transform: translateX(-10%)
+
+@keyframes optionRemoving
+  0%
+    opacity: 1
+    transform: translateY(0)
+  100%
+    opacity: 0
+    transform: translateY(10%)
+
+@keyframes optionSubmitting
+  0%
+    opacity: 1
+    transform: translateY(0)
+  60%
+    opacity: 0
+    transform: translateY(-50%)
+  100%
+    opacity: 0
+    transform: translateY(-50%)

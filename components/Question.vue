@@ -123,6 +123,13 @@
       line-height: 150px
       margin: 0
       padding: 0
+      opacity: 0
+      &.isCreating
+        animation: titleCreating .75s ease-in
+      &.isReady
+        opacity: 1
+      &.isSubmitting
+        animation: titleRemoving .75s ease-in
     .question-option-wrapper
       position: relative
       box-sizing: border-box
@@ -143,7 +150,6 @@
         margin: 0 auto
         width: 80vw
         height: 100%
-        overflow: hidden
         .question-option
           flex: 1
           position: relative
@@ -154,7 +160,7 @@
           transition: transform .18s linear, z-index .18s ease-in-out, opacity .38s ease-in-out, background-color .18s ease-in-out, color .18s ease-in-out, box-shadow .18s ease-in-out
           transform: translateY(0)
           cursor: pointer
-          opacity: 1
+          opacity: 0
           z-index: 1
           &:last-child
             margin: 0
@@ -164,6 +170,27 @@
             color: #FFF
             box-shadow: 1px 2px 3px 0 rgba(0, 0, 0, .15)
             transform: translateY(-25px)
+            &.isSubmitting
+              animation: optionSubmitting .75s ease-out !important
+          &.isReady
+            opacity: 1
+          &.isSubmitting
+            animation: optionRemoving .75s ease-out
+          &:nth-child(0)
+            &.isCreating
+              animation: optionCreating .75s ease-out
+          &:nth-child(1)
+            &.isCreating
+              animation: optionCreating .75s ease-out .1s
+          &:nth-child(2)
+            &.isCreating
+              animation: optionCreating .75s ease-out .2s
+          &:nth-child(3)
+            &.isCreating
+              animation: optionCreating .75s ease-out .3s
+          &:nth-child(4)
+            &.isCreating
+              animation: optionCreating .75s ease-out .4s
           .question-option-text
             position: absolute
             top: 50%

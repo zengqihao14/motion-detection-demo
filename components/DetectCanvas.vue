@@ -161,13 +161,20 @@
           const personSegmentation = await this.bodyNet.estimatePersonSegmentation(this.video, 16, 0.2);
           const maskBackground = true;
           const opacity = 1;
-          const maskBlurAmount = 3;
+          const maskBlurAmount = 0;
           const flipHorizontal = true;
           const maskImage = await bodyPix.toMaskImageData(personSegmentation, maskBackground);
 
-          ctx.clearRect(0, 0, this.containerWidth, this.containerHeight);
+          // ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          // ctx.save();
+          // ctx.scale(-1, 1);
+          // ctx.translate(-this.video.width, 0);
+          // ctx.drawImage(this.video, 0, 0, this.video.width, this.video.height);
+          // // ctx.putImageData(maskImage, 0, 0);
+          // ctx.restore();
+
           await bodyPix.drawMask(this.canvas, this.video, maskImage, opacity, maskBlurAmount, flipHorizontal);
-          const imageData = ctx.getImageData(0, 0, this.containerWidth, this.containerHeight);
+          const imageData = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
           const pose = await this.net.estimatePoses(imageData, {
             flipHorizontal: flipPoseHorizontal,
             decodingMethod: 'single-person'
@@ -213,6 +220,7 @@
 
         this.containerWidth = bodyEl.offsetWidth;
         this.containerHeight = bodyEl.offsetHeight;
+
         canvas.width = this.containerWidth;
         canvas.height = this.containerHeight;
         video.width = this.containerWidth;
