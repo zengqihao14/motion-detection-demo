@@ -16,10 +16,19 @@ export const setupCamera = async (videoEl) => {
   }
 
   let deviceList = [];
+  let selectDevice = null;
   await navigator.mediaDevices.enumerateDevices().then(devices => {
     deviceList = devices.filter(device => {
       return device.kind === 'videoinput'
-    })
+    });
+    selectDevice = deviceList.length ? deviceList[0] : null;
+
+    deviceList.forEach(device => {
+      if (device.label.toLowerCase().match(/logitech/)) {
+        selectDevice = device
+      }
+    });
+    console.log('selectDevice', selectDevice);
   }).catch(err => {
     throw new Error('Browser API navigator.mediaDevices.getUserMedia not available');
   });
@@ -29,7 +38,7 @@ export const setupCamera = async (videoEl) => {
   const stream = await navigator.mediaDevices.getUserMedia({
     'audio': false,
     'video': {
-      deviceId: deviceList[0].deviceId,
+      deviceId: selectDevice.deviceId,
       width: 640
     },
   });
