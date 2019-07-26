@@ -177,7 +177,7 @@
           let minPoseConfidence;
           let minPartConfidence;
 
-          const personSegmentation = await this.bodyNet.estimatePersonSegmentation(this.video, 16, 0.35);
+          const personSegmentation = await this.bodyNet.estimatePersonSegmentation(this.video, 16, 0.45);
           const maskBackground = true;
           const opacity = 1;
           const maskBlurAmount = 0;
