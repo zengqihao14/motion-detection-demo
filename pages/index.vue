@@ -143,7 +143,7 @@
           clearTimeout(this.timerId);
         }
         // 不选择认为放弃，重新开始
-        this.timerId = setTimeout(this.pageReload, 10 * 1000);
+        this.timerId = setTimeout(this.pageReload, 5 * 60 * 1000);
 
         if (this.currentQuestionId === this.questions.length - 1) {
           this.updateGlobalStage(STAGE.END);
