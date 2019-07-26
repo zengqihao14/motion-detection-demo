@@ -9,7 +9,7 @@ export const angleBetween = (vector1, vector2) => {
   return 0;
 };
 
-export const calcArmAngle = (wristPos, elbowPos, shoulderPos) => {
+export const calcForeArmAngle = (wristPos, elbowPos, shoulderPos) => {
   if (wristPos && elbowPos && shoulderPos) {
     const forearm = {
       x: elbowPos.x - wristPos.x,
@@ -21,6 +21,22 @@ export const calcArmAngle = (wristPos, elbowPos, shoulderPos) => {
     };
 
     return angleBetween(forearm, arm);
+  }
+  return 0;
+};
+
+export const calcArmAngle = (elbowPos, shoulderPos, hipPos) => {
+  if (elbowPos && shoulderPos && hipPos) {
+    const arm = {
+      x: shoulderPos.x - elbowPos.x,
+      y: shoulderPos.y - elbowPos.y
+    };
+    const body = {
+      x: shoulderPos.x - hipPos.x,
+      y: shoulderPos.y - hipPos.y
+    };
+
+    return angleBetween(arm, body);
   }
   return 0;
 };
@@ -56,6 +72,10 @@ export const poseFilter = (pose, updateTrakingPoses = () => {}) => {
         if (keypoint.score > SCORE_THRESHOLDS.leftShoulder) {
           trakingPoses['leftShoulder'] = keypoint;
         }
+      } else if (keypoint.part === 'rightHip') {
+        trakingPoses['rightHip'] = keypoint;
+      } else if (keypoint.part === 'leftHip') {
+        trakingPoses['leftHip'] = keypoint;
       }
     });
 
@@ -66,9 +86,17 @@ export const poseFilter = (pose, updateTrakingPoses = () => {}) => {
   }
 };
 
-export const detectHandState = (wristPos, elbowPos, shoulderPos) => {
-  if (wristPos && elbowPos) {
-    return wristPos.y > elbowPos.y ? 'down' : 'up';
+export const detectHandState = (wristPos, elbowPos, shoulderPos, hipPos) => {
+  if (wristPos && elbowPos && shoulderPos && hipPos) {
+    const forearmAngle = calcForeArmAngle(wristPos, elbowPos, shoulderPos);
+    const armAngle = calcArmAngle(elbowPos, shoulderPos, hipPos);
+    const isArmUp = armAngle > 35;
+    const wristAndElbowDiff = Math.abs(wristPos.y - elbowPos.y);
+    const isUp = wristPos.y <= elbowPos.y;
+    // console.log('forearmAngle', forearmAngle)
+    // console.log('armAngle', armAngle)
+    // console.log('wristAndElbowDiff', wristAndElbowDiff)
+    return isUp || (isArmUp && wristAndElbowDiff < 30) ? 'up' : 'down';
   }
   return 'down';
 };
@@ -112,7 +140,7 @@ export const detectArea = (wrist, trakingPoses, canvas, updateSelectedOptionId =
   if (wrist && canvas) {
     const wristPosition = wrist.position;
     const center = canvas.width / 2;
-    const alpha = 0.7;
+    const alpha = 0.75;
 
     const areaA = [
       center - alpha * center,
@@ -151,17 +179,19 @@ export const detectPose = (trakingPoses, hand, canvas, updateWristState = () => 
     const rightWrist = trakingPoses.rightWrist || null;
     const rightElbow = trakingPoses.rightElbow || null;
     const rightShoulder = trakingPoses.rightShoulder || null;
+    const rightHip = trakingPoses.rightHip || null;
     const leftWrist = trakingPoses.leftWrist || null;
     const leftElbow = trakingPoses.leftElbow || null;
     const leftShoulder = trakingPoses.leftShoulder || null;
-    if (hand === 'right' && rightWrist && rightElbow && rightShoulder) {
-      state = detectHandState(rightWrist.position, rightElbow.position, rightShoulder.position);
+    const leftHip = trakingPoses.leftHip || null;
+    if (hand === 'right' && rightWrist && rightElbow && rightShoulder && rightHip) {
+      state = detectHandState(rightWrist.position, rightElbow.position, rightShoulder.position, rightHip.position);
       if (detectOverSholder(rightWrist.position, rightElbow.position, rightShoulder.position)) {
         state = 'overSholder';
       }
       updateWristState(state);
-    } else if (hand === 'left' && leftWrist && leftElbow && leftShoulder) {
-      state = detectHandState(leftWrist.position, leftElbow.position, leftShoulder.position);
+    } else if (hand === 'left' && leftWrist && leftElbow && leftShoulder && leftHip) {
+      state = detectHandState(leftWrist.position, leftElbow.position, leftShoulder.position, leftHip.position);
       if (detectOverSholder(leftWrist.position, leftElbow.position, leftShoulder.position)) {
         state = 'overSholder';
       }
